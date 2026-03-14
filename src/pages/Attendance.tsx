@@ -48,7 +48,24 @@ export default function Attendance() {
   // History state
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [studentHistory, setStudentHistory] = useState<AttendanceRecord[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [fetchingHistory, setFetchingHistory] = useState(false);
+
+  useEffect(() => {
+    setSelectedMonth("");
+  }, [selectedStudentId]);
+
+  useEffect(() => {
+    if (studentHistory.length > 0 && !selectedMonth) {
+      const grouped = studentHistory.reduce((acc, record) => {
+        const month = format(parseISO(record.date), "MMMM yyyy");
+        if (!acc[month]) acc[month] = [];
+        acc[month].push(record);
+        return acc;
+      }, {} as Record<string, AttendanceRecord[]>);
+      setSelectedMonth(Object.keys(grouped)[0]);
+    }
+  }, [studentHistory]);
 
   useEffect(() => {
     fetchStudents();
@@ -376,68 +393,131 @@ export default function Attendance() {
                         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                           {students.find(s => s.id === selectedStudentId)?.name}
                         </h2>
+                        {(() => {
+                          const student = students.find(s => s.id === selectedStudentId);
+                          const lecturesPerMonth = student?.lectures_per_month || 0;
+                          const presentCount = studentHistory.filter(h => h.status === 'present').length;
+                          const months = lecturesPerMonth > 0 ? Math.floor(presentCount / lecturesPerMonth) : 0;
+                          const days = lecturesPerMonth > 0 ? presentCount % lecturesPerMonth : presentCount;
+                          return (
+                            <p className="text-sm font-bold text-emerald-600 mt-1">
+                              {months} মাস {days.toString().padStart(2, '0')} দিন
+                            </p>
+                          );
+                        })()}
                         <p className="text-xs text-slate-500 font-medium">Detailed attendance logs and statistics.</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-black text-emerald-600 tracking-tighter">
-                        {studentHistory.filter(h => h.status === 'present').length}
-                      </div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Present</div>
+                    <div className="text-right flex gap-6">
+                      {(() => {
+                        const student = students.find(s => s.id === selectedStudentId);
+                        const lecturesPerMonth = student?.lectures_per_month || 0;
+                        const presentCount = studentHistory.filter(h => h.status === 'present').length;
+                        const absentCount = studentHistory.filter(h => h.status === 'absent').length;
+                        return (
+                          <>
+                            <div>
+                              <div className="text-3xl font-black text-emerald-600 tracking-tighter">
+                                {presentCount} {lecturesPerMonth > 0 && <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>}
+                              </div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Present</div>
+                            </div>
+                            <div>
+                              <div className="text-3xl font-black text-red-600 tracking-tighter">
+                                {absentCount} {lecturesPerMonth > 0 && <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>}
+                              </div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Absent</div>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-8">
-                    {fetchingHistory ? (
-                      <div className="flex items-center justify-center h-60">
-                        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    ) : studentHistory.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        {studentHistory.map((record) => (
-                          <div 
-                            key={record.id} 
-                            className={cn(
-                              "flex items-center justify-between p-5 rounded-2xl border-2 transition-all hover:scale-[1.02]",
-                              record.status === 'present' 
-                                ? "bg-emerald-50/30 border-emerald-100/50" 
-                                : "bg-red-50/30 border-red-100/50"
-                            )}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className={cn(
-                                "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm",
-                                record.status === 'present' ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
-                              )}>
-                                {record.status === 'present' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-slate-900">
-                                  {format(parseISO(record.date), "MMMM d, yyyy")}
-                                </p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                  {format(parseISO(record.date), "EEEE")}
-                                </p>
-                              </div>
-                            </div>
-                            <span className={cn(
-                              "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
-                              record.status === 'present' ? "text-emerald-600" : "text-red-600"
-                            )}>
-                              {record.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-80 text-slate-400">
-                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                          <Calendar className="w-10 h-10 opacity-20" />
+                    <div className="flex-1 flex flex-col h-full overflow-hidden">
+                      {fetchingHistory ? (
+                        <div className="flex items-center justify-center h-60">
+                          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                         </div>
-                        <p className="text-sm font-bold uppercase tracking-widest">No records found</p>
-                      </div>
-                    )}
-                  </div>
+                      ) : studentHistory.length > 0 ? (
+                        (() => {
+                          const grouped = studentHistory.reduce((acc, record) => {
+                            const month = format(parseISO(record.date), "MMMM yyyy");
+                            if (!acc[month]) acc[month] = [];
+                            acc[month].push(record);
+                            return acc;
+                          }, {} as Record<string, AttendanceRecord[]>);
+                          
+                          const months = Object.keys(grouped);
+
+                          return (
+                            <>
+                              <div className="flex gap-2 p-4 border-b border-slate-100 overflow-x-auto">
+                                {months.map(month => (
+                                  <button
+                                    key={month}
+                                    onClick={() => setSelectedMonth(month)}
+                                    className={cn(
+                                      "px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all",
+                                      selectedMonth === month 
+                                        ? "bg-emerald-500 text-white shadow-md" 
+                                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                    )}
+                                  >
+                                    {month}
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="flex-1 overflow-y-auto p-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                  {grouped[selectedMonth]?.map((record) => (
+                                    <div 
+                                      key={record.id} 
+                                      className={cn(
+                                        "flex items-center justify-between p-5 rounded-2xl border-2 transition-all hover:scale-[1.02]",
+                                        record.status === 'present' 
+                                          ? "bg-emerald-50/30 border-emerald-100/50" 
+                                          : "bg-red-50/30 border-red-100/50"
+                                      )}
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                          "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm",
+                                          record.status === 'present' ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
+                                        )}>
+                                          {record.status === 'present' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-bold text-slate-900">
+                                            {format(parseISO(record.date), "MMMM d, yyyy")}
+                                          </p>
+                                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                            {format(parseISO(record.date), "EEEE")}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <span className={cn(
+                                        "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                                        record.status === 'present' ? "text-emerald-600" : "text-red-600"
+                                      )}>
+                                        {record.status}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-80 text-slate-400">
+                          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                            <Calendar className="w-10 h-10 opacity-20" />
+                          </div>
+                          <p className="text-sm font-bold uppercase tracking-widest">No records found</p>
+                        </div>
+                      )}
+                    </div>
                 </div>
               ) : (
                 <div className="bg-white rounded-3xl border-2 border-slate-100 border-dashed h-full flex flex-col items-center justify-center p-12 text-center">

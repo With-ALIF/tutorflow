@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { ToastContext } from "../context/ToastContext";
 import { db } from "../firebase";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, writeBatch } from "firebase/firestore";
 
 interface Student {
   id: string;
@@ -124,10 +124,23 @@ export default function Students() {
 
   const confirmDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, "students", id));
+      const batch = writeBatch(db);
+      
+      // Delete student
+      batch.delete(doc(db, "students", id));
+      
+      // Delete associated fees
+      const feesQuery = query(collection(db, "fees"), where("student_id", "==", id));
+      const feesSnapshot = await getDocs(feesQuery);
+      feesSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
+      
       setIsDeleteModalOpen(null);
       fetchStudents();
-      showToast("Student deleted successfully!");
+      showToast("Student and associated payments deleted successfully!");
     } catch (err) {
       console.error("Error deleting student:", err);
       showToast("Failed to delete student", "error");

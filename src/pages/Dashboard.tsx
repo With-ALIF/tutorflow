@@ -30,6 +30,7 @@ export default function Dashboard() {
       try {
         const studentsSnapshot = await getDocs(collection(db, "students"));
         const totalStudents = studentsSnapshot.size;
+        const studentIds = new Set(studentsSnapshot.docs.map(doc => doc.id));
 
         const currentMonth = new Date().toISOString().slice(0, 7);
         const feesQuery = query(collection(db, "fees"), where("fee_month", "==", currentMonth));
@@ -41,6 +42,7 @@ export default function Dashboard() {
 
         feesSnapshot.forEach(doc => {
           const data = doc.data();
+          if (!studentIds.has(data.student_id)) return;
           if (data.status === 'paid') {
             monthlyIncome += data.amount;
           } else {

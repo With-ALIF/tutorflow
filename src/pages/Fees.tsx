@@ -62,15 +62,17 @@ export default function Fees() {
 
       const feesQuery = query(collection(db, "fees"), orderBy("payment_date", "desc"));
       const feesSnapshot = await getDocs(feesQuery);
-      const feesData = feesSnapshot.docs.map(doc => {
-        const data = doc.data();
-        const student = studentsData.find(s => s.id === data.student_id);
-        return {
-          id: doc.id,
-          ...data,
-          students: student ? { name: student.name } : { name: "Unknown" }
-        } as FeeRecord;
-      });
+      const feesData = feesSnapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          const student = studentsData.find(s => s.id === data.student_id);
+          return {
+            id: doc.id,
+            ...data,
+            students: student ? { name: student.name } : null
+          };
+        })
+        .filter(fee => fee.students !== null) as FeeRecord[];
 
       setFees(feesData);
       setLoading(false);
