@@ -22,5 +22,13 @@ service cloud.firestore {
     match /students/{studentId} {
       allow read, write: if isAuthenticated();
     }
+
+    match /attendance/{attendanceId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /fees/{feeId} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }

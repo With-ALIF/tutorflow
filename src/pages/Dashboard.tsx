@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { ToastContext } from "../context/ToastContext";
+import { db } from "../firebase";
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 
 interface Stats {
   totalStudents: number;
@@ -24,17 +26,49 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/stats")
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(data => {
-        setStats(data);
+    const fetchStats = async () => {
+      try {
+        const studentsSnapshot = await getDocs(collection(db, "students"));
+        const totalStudents = studentsSnapshot.size;
+
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const feesQuery = query(collection(db, "fees"), where("fee_month", "==", currentMonth));
+        const feesSnapshot = await getDocs(feesQuery);
+        
+        let monthlyIncome = 0;
+        let totalDueBalance = 0;
+        const upcomingFees: any[] = [];
+
+        feesSnapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.status === 'paid') {
+            monthlyIncome += data.amount;
+          } else {
+            totalDueBalance += data.amount;
+            upcomingFees.push({ id: doc.id, ...data });
+          }
+        });
+
+        const recentActivityQuery = query(collection(db, "attendance"), orderBy("date", "desc"), limit(5));
+        const recentActivitySnapshot = await getDocs(recentActivityQuery);
+        const recentActivity = recentActivitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        setStats({
+          totalStudents,
+          monthlyIncome,
+          dueFees: totalDueBalance,
+          recentActivity,
+          upcomingFees: upcomingFees.slice(0, 5)
+        });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        showToast("Failed to fetch stats", "error");
+      } finally {
         setLoading(false);
-      })
-      .catch(async err => {
-        const errorData = await err.json().catch(() => ({ error: "Failed to fetch stats" }));
-        showToast(errorData.error || "Failed to fetch stats", "error");
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchStats();
   }, []);
 
   const formatTime = (dateString: string) => {
@@ -59,7 +93,7 @@ export default function Dashboard() {
     {
       label: "Total Students",
       value: stats?.totalStudents || 0,
-      icon: Users,
+      icon: "https://png.pngtree.com/png-vector/20190223/ourmid/pngtree-student-glyph-black-icon-png-image_691145.jpg",
       color: "bg-blue-500",
       trend: "+12% from last month",
       link: "/students"
@@ -67,15 +101,15 @@ export default function Dashboard() {
     {
       label: "Monthly Income",
       value: `$${(stats?.monthlyIncome || 0).toLocaleString()}`,
-      icon: TrendingUp,
+      icon: "https://png.pngtree.com/png-vector/20231211/ourmid/pngtree-payment-icon-income-png-image_10858293.png",
       color: "bg-emerald-500",
       trend: "+8% from last month",
       link: "/fees"
     },
     {
       label: "Due Fees",
-      value: stats?.dueFees || 0,
-      icon: AlertCircle,
+      value: `$${(stats?.dueFees || 0).toLocaleString()}`,
+      icon: "https://www.shutterstock.com/image-vector/education-grant-icon-on-white-260nw-2256198049.jpg",
       color: "bg-orange-500",
       trend: "Requires attention",
       link: "/fees"
@@ -101,8 +135,12 @@ export default function Dashboard() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50/50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700" />
             
             <div className="flex justify-between items-start mb-10 relative">
-              <div className={`${card.color} p-5 rounded-[1.25rem] text-white shadow-xl shadow-${card.color.split('-')[1]}-500/30 group-hover:scale-110 transition-transform duration-300`}>
-                <card.icon className="w-8 h-8" />
+              <div className={`${card.color} p-5 rounded-[1.25rem] text-white shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+                {typeof card.icon === 'string' ? (
+                  <img src={card.icon} alt={card.label} className="w-8 h-8 object-contain invert" referrerPolicy="no-referrer" />
+                ) : (
+                  <card.icon className="w-8 h-8" />
+                )}
               </div>
               <Link to={card.link} className="p-2 bg-slate-50/80 rounded-xl text-slate-400 hover:text-slate-600 transition-all">
                 <ArrowUpRight className="w-5 h-5" />
@@ -123,74 +161,6 @@ export default function Dashboard() {
             </div>
           </motion.div>
         ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">Recent Activity</h2>
-              <p className="text-xs text-slate-400 font-medium mt-1">Latest updates from your center</p>
-            </div>
-            <Link to="/attendance" className="px-4 py-2 bg-slate-50 text-slate-600 text-xs font-bold rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all">View all</Link>
-          </div>
-          <div className="space-y-2">
-            {stats?.recentActivity && stats.recentActivity.length > 0 ? (
-              stats.recentActivity.map((activity, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${activity.type === 'attendance' ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'}`}>
-                    {activity.type === 'attendance' ? <Calendar className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">{activity.title}</p>
-                    <p className="text-xs text-slate-400 font-medium mt-0.5">{formatTime(activity.time)}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center py-12 text-slate-300">
-                <Calendar className="w-12 h-12 opacity-20 mb-2" />
-                <p className="text-sm font-medium">No recent activity</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">Upcoming Fees</h2>
-              <p className="text-xs text-slate-400 font-medium mt-1">Payments expected this week</p>
-            </div>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-slate-50 text-slate-400 text-xs font-bold rounded-xl hover:text-slate-600 transition-all">Remind All</button>
-              <Link to="/fees" className="px-4 py-2 bg-slate-50 text-slate-600 text-xs font-bold rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all">View all</Link>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {stats?.upcomingFees && stats.upcomingFees.length > 0 ? (
-              stats.upcomingFees.map((fee, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500 font-bold text-lg transition-transform group-hover:scale-110">
-                      {fee.students?.name?.charAt(0) || 'S'}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800 group-hover:text-orange-600 transition-colors">{fee.students?.name}</p>
-                      <p className="text-xs text-slate-400 font-medium mt-0.5">Due: ${fee.amount}</p>
-                    </div>
-                  </div>
-                  <span className="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full uppercase tracking-wider">PENDING</span>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center py-12 text-slate-300">
-                <AlertCircle className="w-12 h-12 opacity-20 mb-2" />
-                <p className="text-sm font-medium">No pending fees</p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );

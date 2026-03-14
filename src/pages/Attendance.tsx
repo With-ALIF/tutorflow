@@ -15,12 +15,17 @@ import { motion, AnimatePresence } from "motion/react";
 import { format, parseISO } from "date-fns";
 import { cn } from "../lib/utils";
 import { ToastContext } from "../context/ToastContext";
+import { db } from "../firebase";
+import { collection, getDocs, query, where, orderBy, doc, setDoc, getDoc, addDoc, getCountFromServer } from "firebase/firestore";
 
 interface Student {
   id: string;
   name: string;
   class: string;
   phone: string;
+  monthly_fee?: number;
+  lectures_per_month?: number;
+  photo?: string;
 }
 
 interface AttendanceRecord {
@@ -63,12 +68,12 @@ export default function Attendance() {
 
   const fetchStudents = async () => {
     try {
-      const res = await fetch("/api/students");
-      if (!res.ok) throw res;
-      const data = await res.json();
-      setStudents(Array.isArray(data) ? data : []);
+      const querySnapshot = await getDocs(collection(db, "students"));
+      const studentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      setStudents(studentsData.sort((a, b) => a.name.localeCompare(b.name)));
       setLoading(false);
     } catch (err) {
+      console.error("Error fetching students:", err);
       showToast("Failed to fetch students", "error");
       setLoading(false);
     }
@@ -76,17 +81,16 @@ export default function Attendance() {
 
   const fetchDailyAttendance = async () => {
     try {
-      const res = await fetch(`/api/attendance?date=${date}`);
-      if (!res.ok) throw res;
-      const data = await res.json();
+      const q = query(collection(db, "attendance"), where("date", "==", date));
+      const querySnapshot = await getDocs(q);
       const initialRecords: Record<string, 'present' | 'absent'> = {};
-      if (Array.isArray(data)) {
-        data.forEach((rec: any) => {
-          initialRecords[rec.student_id] = rec.status;
-        });
-      }
+      querySnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        initialRecords[data.student_id] = data.status;
+      });
       setRecords(initialRecords);
     } catch (err) {
+      console.error("Error fetching daily attendance:", err);
       showToast("Failed to fetch attendance", "error");
     }
   };
@@ -94,11 +98,12 @@ export default function Attendance() {
   const fetchStudentHistory = async () => {
     setFetchingHistory(true);
     try {
-      const res = await fetch(`/api/attendance?student_id=${selectedStudentId}`);
-      if (!res.ok) throw res;
-      const data = await res.json();
-      setStudentHistory(Array.isArray(data) ? data : []);
+      const q = query(collection(db, "attendance"), where("student_id", "==", selectedStudentId), orderBy("date", "desc"));
+      const querySnapshot = await getDocs(q);
+      const historyData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
+      setStudentHistory(historyData);
     } catch (err) {
+      console.error("Error fetching student history:", err);
       showToast("Failed to fetch history", "error");
     } finally {
       setFetchingHistory(false);
@@ -111,25 +116,50 @@ export default function Attendance() {
 
   const handleSave = async () => {
     setSaving(true);
-    const payload = Object.entries(records).map(([studentId, status]) => ({
-      student_id: studentId,
-      date,
-      status
-    }));
-
     try {
-      const res = await fetch("/api/attendance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!res.ok) throw res;
+      for (const [studentId, status] of Object.entries(records)) {
+        const attendanceId = `${studentId}_${date}`;
+        const attendanceRef = doc(db, "attendance", attendanceId);
+        await setDoc(attendanceRef, {
+          student_id: studentId,
+          date,
+          status,
+          created_at: new Date().toISOString()
+        }, { merge: true });
+
+        // Auto-generate fee logic
+        if (status === 'present') {
+          const student = students.find(s => s.id === studentId);
+          if (student) {
+            const lecturesPerMonth = student.lectures_per_month || 12;
+            const q = query(collection(db, "attendance"), where("student_id", "==", studentId), where("status", "==", "present"));
+            const snapshot = await getCountFromServer(q);
+            const count = snapshot.data().count;
+
+            if (count > 0 && count % lecturesPerMonth === 0) {
+              const currentMonth = new Date().toISOString().slice(0, 7);
+              const feeQ = query(collection(db, "fees"), where("student_id", "==", studentId), where("fee_month", "==", currentMonth));
+              const feeSnapshot = await getDocs(feeQ);
+              
+              if (feeSnapshot.empty) {
+                await addDoc(collection(db, "fees"), {
+                  student_id: studentId,
+                  amount: student.monthly_fee || 0,
+                  payment_date: new Date().toISOString().split('T')[0],
+                  fee_month: currentMonth,
+                  status: 'due',
+                  created_at: new Date().toISOString()
+                });
+              }
+            }
+          }
+        }
+      }
       
       showToast("Attendance saved successfully!");
     } catch (err: any) {
-      const errorData = await err.json().catch(() => ({ error: "Failed to save attendance" }));
-      showToast(errorData.error || "Failed to save attendance", "error");
+      console.error("Error saving attendance:", err);
+      showToast(err.message || "Failed to save attendance", "error");
     } finally {
       setSaving(false);
     }
@@ -227,9 +257,13 @@ export default function Attendance() {
                       <tr key={student.id} className="hover:bg-slate-50/30 transition-colors group">
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                              {student.name.charAt(0)}
-                            </div>
+                            {student.photo ? (
+                              <img src={student.photo} alt={student.name} className="w-10 h-10 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                                {student.name.charAt(0)}
+                              </div>
+                            )}
                             <span className="font-bold text-slate-900">{student.name}</span>
                           </div>
                         </td>

@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
+import { db } from "../firebase";
+import { doc, getDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore";
 
 interface Student {
   id: string;
@@ -25,6 +27,7 @@ interface Student {
   monthly_fee: number;
   lectures_per_month: number;
   join_date: string;
+  photo?: string;
 }
 
 export default function StudentProfile() {
@@ -35,23 +38,30 @@ export default function StudentProfile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, we'd have a specific endpoint for student details
-    // For now, we'll filter from the general lists or fetch by ID if implemented
-    fetch("/api/students")
-      .then(res => res.json())
-      .then(data => {
-        const found = data.find((s: any) => s.id === id);
-        setStudent(found);
+    const fetchStudentData = async () => {
+      if (!id) return;
+      try {
+        const studentDoc = await getDoc(doc(db, "students", id));
+        if (studentDoc.exists()) {
+          setStudent({ id: studentDoc.id, ...studentDoc.data() } as Student);
+        }
+
+        const attendanceQuery = query(collection(db, "attendance"), where("student_id", "==", id), orderBy("date", "desc"));
+        const attendanceSnapshot = await getDocs(attendanceQuery);
+        setAttendance(attendanceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        const feesQuery = query(collection(db, "fees"), where("student_id", "==", id), orderBy("payment_date", "desc"));
+        const feesSnapshot = await getDocs(feesQuery);
+        setFees(feesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      } catch (error) {
+        console.error("Error fetching student profile data:", error);
+      } finally {
         setLoading(false);
-      });
-    
-    // Fetch related data (mocked or filtered)
-    fetch("/api/attendance").then(res => res.json()).then(data => {
-      setAttendance(data.filter((a: any) => a.student_id === id));
-    });
-    fetch("/api/fees").then(res => res.json()).then(data => {
-      setFees(data.filter((f: any) => f.student_id === id));
-    });
+      }
+    };
+
+    fetchStudentData();
   }, [id]);
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading profile...</div>;
@@ -86,9 +96,13 @@ export default function StudentProfile() {
             <div className="px-8 pb-8">
               <div className="-mt-16 mb-6 relative">
                 <div className="w-32 h-32 rounded-3xl bg-white p-1.5 shadow-2xl">
-                  <div className="w-full h-full rounded-2xl bg-slate-100 flex items-center justify-center text-4xl font-bold text-slate-400">
-                    {student.name.charAt(0)}
-                  </div>
+                  {student.photo ? (
+                    <img src={student.photo} alt={student.name} className="w-full h-full rounded-2xl object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full rounded-2xl bg-slate-100 flex items-center justify-center text-4xl font-bold text-slate-400">
+                      {student.name.charAt(0)}
+                    </div>
+                  )}
                 </div>
                 <div className="absolute bottom-2 right-2 w-8 h-8 bg-emerald-500 border-4 border-white rounded-full flex items-center justify-center text-white">
                   <CheckCircle2 className="w-4 h-4" />

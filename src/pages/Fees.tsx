@@ -9,9 +9,13 @@ import {
   Clock,
   Send
 } from "lucide-react";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { ToastContext } from "../context/ToastContext";
+import { db } from "../firebase";
+import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy } from "firebase/firestore";
 
 interface FeeRecord {
   id: string;
@@ -20,7 +24,7 @@ interface FeeRecord {
   payment_date: string;
   fee_month: string;
   status: 'paid' | 'due';
-  students: {
+  students?: {
     name: string;
   };
 }
@@ -52,23 +56,27 @@ export default function Fees() {
 
   const fetchData = async () => {
     try {
-      const [feesRes, studentsRes] = await Promise.all([
-        fetch("/api/fees"),
-        fetch("/api/students")
-      ]);
-      
-      if (!feesRes.ok) throw feesRes;
-      if (!studentsRes.ok) throw studentsRes;
-      
-      const feesData = await feesRes.json();
-      const studentsData = await studentsRes.json();
-      
-      setFees(Array.isArray(feesData) ? feesData : []);
-      setStudents(Array.isArray(studentsData) ? studentsData : []);
+      const studentsSnapshot = await getDocs(collection(db, "students"));
+      const studentsData = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      setStudents(studentsData);
+
+      const feesQuery = query(collection(db, "fees"), orderBy("payment_date", "desc"));
+      const feesSnapshot = await getDocs(feesQuery);
+      const feesData = feesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const student = studentsData.find(s => s.id === data.student_id);
+        return {
+          id: doc.id,
+          ...data,
+          students: student ? { name: student.name } : { name: "Unknown" }
+        } as FeeRecord;
+      });
+
+      setFees(feesData);
       setLoading(false);
     } catch (err: any) {
-      const errorData = await err.json().catch(() => ({ error: "Failed to fetch data" }));
-      showToast(errorData.error || "Failed to fetch data", "error");
+      console.error("Error fetching data:", err);
+      showToast("Failed to fetch data", "error");
       setFees([]);
       setStudents([]);
       setLoading(false);
@@ -77,31 +85,44 @@ export default function Fees() {
 
   const handleMarkAsPaid = async (id: string) => {
     try {
-      const res = await fetch(`/api/fees/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: 'paid', payment_date: new Date().toISOString().split('T')[0] })
+      const feeRef = doc(db, "fees", id);
+      await updateDoc(feeRef, {
+        status: 'paid',
+        payment_date: new Date().toISOString().split('T')[0]
       });
-      
-      if (!res.ok) throw res;
       
       fetchData();
       showToast("Fee marked as paid!");
     } catch (err: any) {
+      console.error("Error updating fee status:", err);
       showToast("Failed to update fee status", "error");
     }
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Payment History", 14, 15);
+    autoTable(doc, {
+      head: [['Student', 'Fee Month', 'Amount', 'Date', 'Status']],
+      body: fees.map(fee => [
+        fee.students?.name || 'Unknown',
+        fee.fee_month ? new Date(fee.fee_month + '-01').toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'N/A',
+        `$${fee.amount}`,
+        new Date(fee.payment_date).toLocaleDateString(),
+        fee.status
+      ]),
+      startY: 20
+    });
+    doc.save("payment_history.pdf");
   };
 
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/fees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPayment)
+      await addDoc(collection(db, "fees"), {
+        ...newPayment,
+        created_at: new Date().toISOString()
       });
-      
-      if (!res.ok) throw res;
       
       setIsModalOpen(false);
       fetchData();
@@ -114,8 +135,8 @@ export default function Fees() {
         status: 'paid'
       });
     } catch (err: any) {
-      const errorData = await err.json().catch(() => ({ error: "Failed to record payment" }));
-      showToast(errorData.error || "Failed to record payment", "error");
+      console.error("Error recording payment:", err);
+      showToast("Failed to record payment", "error");
     }
   };
 
@@ -153,7 +174,7 @@ export default function Fees() {
                 <button className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
                   <Filter className="w-4 h-4" />
                 </button>
-                <button className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
+                <button onClick={downloadPDF} className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
                   <Download className="w-4 h-4" />
                 </button>
               </div>
@@ -263,14 +284,15 @@ export default function Fees() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <h2 className="text-xl font-bold text-slate-900">Record Payment</h2>
                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
               </div>
-              <form onSubmit={handleAddPayment} className="p-6 space-y-4">
-                <div>
+              <form onSubmit={handleAddPayment} className="flex flex-col overflow-hidden">
+                <div className="p-6 space-y-4 overflow-y-auto">
+                  <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Select Student</label>
                   <select 
                     required
@@ -344,7 +366,8 @@ export default function Fees() {
                     </label>
                   </div>
                 </div>
-                <div className="pt-4 flex gap-3">
+                </div>
+                <div className="p-6 border-t border-slate-100 flex gap-3 shrink-0">
                   <button 
                     type="button"
                     onClick={() => setIsModalOpen(false)}

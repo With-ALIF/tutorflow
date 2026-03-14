@@ -26,6 +26,7 @@ interface Student {
   monthly_fee: number;
   lectures_per_month: number;
   join_date: string;
+  photo?: string;
 }
 
 export default function Students() {
@@ -44,8 +45,25 @@ export default function Students() {
     address: "",
     monthly_fee: 0,
     lectures_per_month: 12,
-    join_date: new Date().toISOString().split('T')[0]
+    join_date: new Date().toISOString().split('T')[0],
+    photo: ""
   });
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      if (isEdit && editingStudent) {
+        setEditingStudent({ ...editingStudent, photo: base64String });
+      } else {
+        setNewStudent({ ...newStudent, photo: base64String });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     fetchStudents();
@@ -78,7 +96,8 @@ export default function Students() {
         address: "",
         monthly_fee: 0,
         lectures_per_month: 12,
-        join_date: new Date().toISOString().split('T')[0]
+        join_date: new Date().toISOString().split('T')[0],
+        photo: ""
       });
     } catch (err) {
       console.error("Error adding student:", err);
@@ -162,6 +181,8 @@ export default function Students() {
                 <th className="px-6 py-4">Class</th>
                 <th className="px-6 py-4">Phone Number</th>
                 <th className="px-6 py-4">Monthly Fee</th>
+                <th className="px-6 py-4">Lectures/Month</th>
+                <th className="px-6 py-4">Per Lecture</th>
                 <th className="px-6 py-4">Join Date</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -171,9 +192,13 @@ export default function Students() {
                 <tr key={student.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <Link to={`/students/${student.id}`} className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg transition-transform group-hover:scale-110">
-                        {student.name.charAt(0)}
-                      </div>
+                      {student.photo ? (
+                        <img src={student.photo} alt={student.name} className="w-12 h-12 rounded-2xl object-cover transition-transform group-hover:scale-110" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg transition-transform group-hover:scale-110">
+                          {student.name.charAt(0)}
+                        </div>
+                      )}
                       <div>
                         <p className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{student.name}</p>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">ID: {student.id.slice(0, 8)}</p>
@@ -198,6 +223,12 @@ export default function Students() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-mono font-bold text-slate-900">${student.monthly_fee}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm font-mono font-bold text-slate-900">{student.lectures_per_month || 12}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm font-mono font-bold text-emerald-600">${Math.round(student.monthly_fee / (student.lectures_per_month || 12))}</span>
                   </td>
                   <td className="px-6 py-4 text-slate-500 text-xs font-medium">
                     {new Date(student.join_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -225,7 +256,7 @@ export default function Students() {
               ))}
               {filteredStudents.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2 text-slate-400">
                       <Users className="w-12 h-12 opacity-20" />
                       <p className="text-sm font-medium">No students found</p>
@@ -288,8 +319,22 @@ export default function Students() {
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
               </div>
-              <form onSubmit={handleAddStudent} className="p-6 space-y-4 overflow-y-auto">
-                <div className="grid grid-cols-1 gap-4">
+              <form onSubmit={handleAddStudent} className="flex flex-col overflow-hidden">
+                <div className="p-6 space-y-4 overflow-y-auto">
+                  <div className="grid grid-cols-1 gap-4">
+                  <div className="flex flex-col items-center gap-4 mb-2">
+                    {newStudent.photo ? (
+                      <img src={newStudent.photo} alt="Preview" className="w-24 h-24 rounded-full object-cover border-4 border-emerald-50" />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border-4 border-slate-50">
+                        <Users className="w-8 h-8" />
+                      </div>
+                    )}
+                    <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+                      Upload Photo
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e, false)} />
+                    </label>
+                  </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
                     <input 
@@ -382,7 +427,8 @@ export default function Students() {
                     />
                   </div>
                 </div>
-                <div className="pt-4 flex gap-3">
+                </div>
+                <div className="p-6 border-t border-slate-100 flex gap-3 shrink-0">
                   <button 
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -419,8 +465,22 @@ export default function Students() {
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
               </div>
-              <form onSubmit={handleEditStudent} className="p-6 space-y-4 overflow-y-auto">
-                <div className="grid grid-cols-1 gap-4">
+              <form onSubmit={handleEditStudent} className="flex flex-col overflow-hidden">
+                <div className="p-6 space-y-4 overflow-y-auto">
+                  <div className="grid grid-cols-1 gap-4">
+                  <div className="flex flex-col items-center gap-4 mb-2">
+                    {editingStudent.photo ? (
+                      <img src={editingStudent.photo} alt="Preview" className="w-24 h-24 rounded-full object-cover border-4 border-emerald-50" />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border-4 border-slate-50">
+                        <Users className="w-8 h-8" />
+                      </div>
+                    )}
+                    <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+                      Upload Photo
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e, true)} />
+                    </label>
+                  </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
                     <input 
@@ -506,7 +566,8 @@ export default function Students() {
                     />
                   </div>
                 </div>
-                <div className="pt-4 flex gap-3">
+                </div>
+                <div className="p-6 border-t border-slate-100 flex gap-3 shrink-0">
                   <button 
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
