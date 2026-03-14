@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Assumed Data Model
+    // Collection: students
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - class: string (required)
+    //   - phone: string (required)
+    //   - subject: string (optional)
+    //   - address: string (optional)
+    //   - monthly_fee: number (optional)
+    //   - lectures_per_month: number (optional)
+    //   - join_date: string (optional)
+
+    match /students/{studentId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

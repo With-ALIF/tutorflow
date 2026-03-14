@@ -13,6 +13,8 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { ToastContext } from "../context/ToastContext";
+import { db } from "../firebase";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 
 interface Student {
   id: string;
@@ -49,87 +51,70 @@ export default function Students() {
     fetchStudents();
   }, []);
 
-  const fetchStudents = () => {
-    fetch("/api/students")
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(data => {
-        if (Array.isArray(data)) {
-          setStudents(data);
-        } else {
-          setStudents([]);
-        }
-      })
-      .catch(async err => {
-        const errorData = await err.json().catch(() => ({ error: "Failed to fetch students" }));
-        showToast(errorData.error || "Failed to fetch students", "error");
-        setStudents([]);
-      });
+  const fetchStudents = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "students"));
+      const studentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      setStudents(studentsData);
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      showToast("Failed to fetch students", "error");
+      setStudents([]);
+    }
   };
 
-  const handleAddStudent = (e: React.FormEvent) => {
+  const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    fetch("/api/students", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newStudent)
-    })
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(() => {
-        setIsModalOpen(false);
-        fetchStudents();
-        showToast("Student added successfully!");
-        setNewStudent({
-          name: "",
-          class: "",
-          phone: "",
-          subject: "",
-          address: "",
-          monthly_fee: 0,
-          lectures_per_month: 12,
-          join_date: new Date().toISOString().split('T')[0]
-        });
-      })
-      .catch(async err => {
-        const errorData = await err.json().catch(() => ({ error: "Failed to add student" }));
-        showToast(errorData.error || "Failed to add student", "error");
+    try {
+      await addDoc(collection(db, "students"), newStudent);
+      setIsModalOpen(false);
+      fetchStudents();
+      showToast("Student added successfully!");
+      setNewStudent({
+        name: "",
+        class: "",
+        phone: "",
+        subject: "",
+        address: "",
+        monthly_fee: 0,
+        lectures_per_month: 12,
+        join_date: new Date().toISOString().split('T')[0]
       });
+    } catch (err) {
+      console.error("Error adding student:", err);
+      showToast("Failed to add student", "error");
+    }
   };
 
-  const handleEditStudent = (e: React.FormEvent) => {
+  const handleEditStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStudent) return;
 
-    fetch(`/api/students/${editingStudent.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editingStudent)
-    })
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(() => {
-        setIsEditModalOpen(false);
-        fetchStudents();
-        showToast("Student updated successfully!");
-        setEditingStudent(null);
-      })
-      .catch(async err => {
-        const errorData = await err.json().catch(() => ({ error: "Failed to update student" }));
-        showToast(errorData.error || "Failed to update student", "error");
-      });
+    try {
+      const studentRef = doc(db, "students", editingStudent.id);
+      await updateDoc(studentRef, { ...editingStudent });
+      setIsEditModalOpen(false);
+      fetchStudents();
+      showToast("Student updated successfully!");
+      setEditingStudent(null);
+    } catch (err) {
+      console.error("Error updating student:", err);
+      showToast("Failed to update student", "error");
+    }
   };
 
-  const confirmDelete = (id: string) => {
-    fetch(`/api/students/${id}`, { method: "DELETE" })
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(() => {
-        setIsDeleteModalOpen(null);
-        fetchStudents();
-        showToast("Student deleted successfully!");
-      })
-      .catch(async err => {
-        const errorData = await err.json().catch(() => ({ error: "Failed to delete student" }));
-        showToast(errorData.error || "Failed to delete student", "error");
-      });
+  const confirmDelete = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "students", id));
+      setIsDeleteModalOpen(null);
+      fetchStudents();
+      showToast("Student deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting student:", err);
+      showToast("Failed to delete student", "error");
+    }
   };
+
 
   const filteredStudents = Array.isArray(students) ? students.filter(s => 
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -304,84 +289,94 @@ export default function Students() {
                 </button>
               </div>
               <form onSubmit={handleAddStudent} className="p-6 space-y-4 overflow-y-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
                     <input 
                       required
                       type="text" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                      placeholder="Enter student name"
                       value={newStudent.name}
                       onChange={e => setNewStudent({...newStudent, name: e.target.value})}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Class</label>
-                    <input 
-                      required
-                      type="text" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={newStudent.class}
-                      onChange={e => setNewStudent({...newStudent, class: e.target.value})}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Class</label>
+                      <input 
+                        required
+                        type="text" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        placeholder="e.g. 10th"
+                        value={newStudent.class}
+                        onChange={e => setNewStudent({...newStudent, class: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Subject</label>
+                      <input 
+                        required
+                        type="text" 
+                        placeholder="e.g. Mathematics"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        value={newStudent.subject}
+                        onChange={e => setNewStudent({...newStudent, subject: e.target.value})}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="e.g. Mathematics"
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={newStudent.subject}
-                      onChange={e => setNewStudent({...newStudent, subject: e.target.value})}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Address</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address</label>
                     <textarea 
                       required
                       rows={2}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none resize-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all resize-none"
+                      placeholder="Enter full address"
                       value={newStudent.address}
                       onChange={e => setNewStudent({...newStudent, address: e.target.value})}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Monthly Fee ($)</label>
-                    <input 
-                      required
-                      type="number" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={newStudent.monthly_fee}
-                      onChange={e => setNewStudent({...newStudent, monthly_fee: Number(e.target.value)})}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Monthly Fee ($)</label>
+                      <input 
+                        required
+                        type="number" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        placeholder="0.00"
+                        value={newStudent.monthly_fee}
+                        onChange={e => setNewStudent({...newStudent, monthly_fee: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lectures / Month</label>
+                      <input 
+                        required
+                        type="number" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        placeholder="12"
+                        value={newStudent.lectures_per_month}
+                        onChange={e => setNewStudent({...newStudent, lectures_per_month: Number(e.target.value)})}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Lectures / Month</label>
-                    <input 
-                      required
-                      type="number" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={newStudent.lectures_per_month}
-                      onChange={e => setNewStudent({...newStudent, lectures_per_month: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Phone Number</label>
                     <input 
                       required
                       type="tel" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                      placeholder="+1 (555) 000-0000"
                       value={newStudent.phone}
                       onChange={e => setNewStudent({...newStudent, phone: e.target.value})}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Joining Date</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Joining Date</label>
                     <input 
                       required
                       type="date" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
                       value={newStudent.join_date}
                       onChange={e => setNewStudent({...newStudent, join_date: e.target.value})}
                     />
@@ -425,84 +420,87 @@ export default function Students() {
                 </button>
               </div>
               <form onSubmit={handleEditStudent} className="p-6 space-y-4 overflow-y-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
                     <input 
                       required
                       type="text" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
                       value={editingStudent.name}
                       onChange={e => setEditingStudent({...editingStudent, name: e.target.value})}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Class</label>
-                    <input 
-                      required
-                      type="text" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={editingStudent.class}
-                      onChange={e => setEditingStudent({...editingStudent, class: e.target.value})}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Class</label>
+                      <input 
+                        required
+                        type="text" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        value={editingStudent.class}
+                        onChange={e => setEditingStudent({...editingStudent, class: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Subject</label>
+                      <input 
+                        required
+                        type="text" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        value={editingStudent.subject}
+                        onChange={e => setEditingStudent({...editingStudent, subject: e.target.value})}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="e.g. Mathematics"
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={editingStudent.subject}
-                      onChange={e => setEditingStudent({...editingStudent, subject: e.target.value})}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Address</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address</label>
                     <textarea 
                       required
                       rows={2}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none resize-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all resize-none"
                       value={editingStudent.address}
                       onChange={e => setEditingStudent({...editingStudent, address: e.target.value})}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Monthly Fee ($)</label>
-                    <input 
-                      required
-                      type="number" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={editingStudent.monthly_fee}
-                      onChange={e => setEditingStudent({...editingStudent, monthly_fee: Number(e.target.value)})}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Monthly Fee ($)</label>
+                      <input 
+                        required
+                        type="number" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        value={editingStudent.monthly_fee}
+                        onChange={e => setEditingStudent({...editingStudent, monthly_fee: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lectures / Month</label>
+                      <input 
+                        required
+                        type="number" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        value={editingStudent.lectures_per_month}
+                        onChange={e => setEditingStudent({...editingStudent, lectures_per_month: Number(e.target.value)})}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Lectures / Month</label>
-                    <input 
-                      required
-                      type="number" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-                      value={editingStudent.lectures_per_month}
-                      onChange={e => setEditingStudent({...editingStudent, lectures_per_month: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Phone Number</label>
                     <input 
                       required
                       type="tel" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
                       value={editingStudent.phone}
                       onChange={e => setEditingStudent({...editingStudent, phone: e.target.value})}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Joining Date</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Joining Date</label>
                     <input 
                       required
                       type="date" 
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
                       value={editingStudent.join_date}
                       onChange={e => setEditingStudent({...editingStudent, join_date: e.target.value})}
                     />

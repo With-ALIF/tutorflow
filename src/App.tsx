@@ -7,13 +7,13 @@ import Attendance from "./pages/Attendance";
 import Fees from "./pages/Fees";
 import StudentProfile from "./pages/StudentProfile";
 import Login from "./pages/Login";
-import { supabase } from "./lib/supabase";
-import { Session } from "@supabase/supabase-js";
+import { auth } from "./firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { X, CheckCircle, AlertCircle } from "lucide-react";
 import { ToastContext } from "./context/ToastContext";
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
@@ -23,16 +23,12 @@ export default function App() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
@@ -43,38 +39,13 @@ export default function App() {
     );
   }
 
-  const isConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!isConfigured) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-red-100 text-center">
-          <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-2xl">⚠️</span>
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Configuration Required</h2>
-          <p className="text-slate-600 mb-6">
-            Please set your Supabase environment variables in the <b>Settings</b> menu:
-          </p>
-          <div className="text-left bg-slate-50 p-4 rounded-lg font-mono text-xs space-y-2 mb-6">
-            <p>VITE_SUPABASE_URL</p>
-            <p>VITE_SUPABASE_ANON_KEY</p>
-          </div>
-          <p className="text-sm text-slate-500">
-            After setting the variables, the app will refresh and work correctly.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <ToastContext.Provider value={{ showToast }}>
       <Router>
         <Routes>
-          <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
+          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
           
-          <Route path="/" element={session ? <Layout /> : <Navigate to="/login" />}>
+          <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
             <Route index element={<Dashboard />} />
             <Route path="students" element={<Students />} />
             <Route path="students/:id" element={<StudentProfile />} />
