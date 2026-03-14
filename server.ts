@@ -136,7 +136,8 @@ async function startServer() {
       if (!req.body || (Array.isArray(req.body) && req.body.length === 0)) {
         return res.json([]);
       }
-      const { data, error } = await getSupabase()
+      const supabase = getSupabase();
+      const { data, error } = await supabase
         .from("attendance")
         .upsert(req.body, { onConflict: "student_id,date" })
         .select();
@@ -145,6 +146,54 @@ async function startServer() {
         console.error("Error upserting attendance:", error);
         return res.status(500).json({ error: error.message });
       }
+
+      // Auto-generate due fees for students who completed their lecture cycle
+      try {
+        const attendances = Array.isArray(req.body) ? req.body : [req.body];
+        const presentAttendances = attendances.filter((a: any) => a.status === 'present');
+        
+        for (const att of presentAttendances) {
+          const { data: student } = await supabase
+            .from('students')
+            .select('id, monthly_fee, lectures_per_month')
+            .eq('id', att.student_id)
+            .single();
+            
+          if (!student) continue;
+          
+          const lecturesPerMonth = student.lectures_per_month || 12;
+          
+          const { count } = await supabase
+            .from('attendance')
+            .select('*', { count: 'exact', head: true })
+            .eq('student_id', student.id)
+            .eq('status', 'present');
+            
+          if (count && count > 0 && count % lecturesPerMonth === 0) {
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            
+            const { data: existingFee } = await supabase
+              .from('fees')
+              .select('id')
+              .eq('student_id', student.id)
+              .eq('fee_month', currentMonth)
+              .limit(1);
+              
+            if (!existingFee || existingFee.length === 0) {
+              await supabase.from('fees').insert({
+                student_id: student.id,
+                amount: student.monthly_fee,
+                payment_date: new Date().toISOString().split('T')[0],
+                fee_month: currentMonth,
+                status: 'due'
+              });
+            }
+          }
+        }
+      } catch (autoFeeErr) {
+        console.error("Error auto-generating fees:", autoFeeErr);
+      }
+
       res.json(data);
     } catch (err) {
       console.error("Unexpected error in POST /api/attendance:", err);
@@ -185,6 +234,25 @@ async function startServer() {
       res.json(data[0]);
     } catch (err) {
       console.error("Unexpected error in POST /api/fees:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.put("/api/fees/:id", async (req, res) => {
+    try {
+      const { data, error } = await getSupabase()
+        .from("fees")
+        .update(req.body)
+        .eq("id", req.params.id)
+        .select();
+      
+      if (error) {
+        console.error("Error updating fee record:", error);
+        return res.status(500).json({ error: error.message });
+      }
+      res.json(data[0]);
+    } catch (err) {
+      console.error("Unexpected error in PUT /api/fees/:id:", err);
       res.status(500).json({ error: "Internal server error" });
     }
   });

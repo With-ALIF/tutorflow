@@ -7,7 +7,8 @@ import {
   Trash2, 
   UserPlus,
   Phone,
-  BookOpen
+  BookOpen,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
@@ -18,6 +19,8 @@ interface Student {
   name: string;
   class: string;
   phone: string;
+  subject: string;
+  address: string;
   monthly_fee: number;
   lectures_per_month: number;
   join_date: string;
@@ -28,11 +31,15 @@ export default function Students() {
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<string | null>(null);
   const [newStudent, setNewStudent] = useState({
     name: "",
     class: "",
     phone: "",
+    subject: "",
+    address: "",
     monthly_fee: 0,
     lectures_per_month: 12,
     join_date: new Date().toISOString().split('T')[0]
@@ -75,6 +82,8 @@ export default function Students() {
           name: "",
           class: "",
           phone: "",
+          subject: "",
+          address: "",
           monthly_fee: 0,
           lectures_per_month: 12,
           join_date: new Date().toISOString().split('T')[0]
@@ -83,6 +92,28 @@ export default function Students() {
       .catch(async err => {
         const errorData = await err.json().catch(() => ({ error: "Failed to add student" }));
         showToast(errorData.error || "Failed to add student", "error");
+      });
+  };
+
+  const handleEditStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+
+    fetch(`/api/students/${editingStudent.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editingStudent)
+    })
+      .then(res => res.ok ? res.json() : Promise.reject(res))
+      .then(() => {
+        setIsEditModalOpen(false);
+        fetchStudents();
+        showToast("Student updated successfully!");
+        setEditingStudent(null);
+      })
+      .catch(async err => {
+        const errorData = await err.json().catch(() => ({ error: "Failed to update student" }));
+        showToast(errorData.error || "Failed to update student", "error");
       });
   };
 
@@ -106,42 +137,42 @@ export default function Students() {
   ) : [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Student Management</h1>
-          <p className="text-slate-500 mt-1">Manage your students, their details and academic records.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">Student Management</h1>
+          <p className="text-slate-500 mt-1 font-medium text-sm md:text-base">Manage your students, their details and academic records.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 w-full md:w-auto"
         >
           <UserPlus className="w-5 h-5" />
           <span>Add New Student</span>
         </button>
       </header>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input 
               type="text" 
               placeholder="Search by name or class..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <span>Total: <b>{filteredStudents.length}</b> students</span>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <span>Total: <span className="text-emerald-600">{filteredStudents.length}</span> students</span>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-bold">
+              <tr className="text-slate-400 text-[11px] uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/30">
                 <th className="px-6 py-4">Student Name</th>
                 <th className="px-6 py-4">Class</th>
                 <th className="px-6 py-4">Phone Number</th>
@@ -150,46 +181,56 @@ export default function Students() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-50">
               {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-4">
-                    <Link to={`/students/${student.id}`} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <Link to={`/students/${student.id}`} className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg transition-transform group-hover:scale-110">
                         {student.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors">{student.name}</p>
-                        <p className="text-xs text-slate-500">ID: {student.id.slice(0, 8)}</p>
+                        <p className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{student.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">ID: {student.id.slice(0, 8)}</p>
                       </div>
                     </Link>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-700">{student.class}</span>
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                        <BookOpen className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-700">{student.class}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-slate-700">
-                      <Phone className="w-4 h-4 text-slate-400" />
-                      <span>{student.phone}</span>
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-medium">{student.phone}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="font-mono font-semibold text-slate-900">${student.monthly_fee}</span>
+                    <span className="text-sm font-mono font-bold text-slate-900">${student.monthly_fee}</span>
                   </td>
-                  <td className="px-6 py-4 text-slate-500 text-sm">
-                    {new Date(student.join_date).toLocaleDateString()}
+                  <td className="px-6 py-4 text-slate-500 text-xs font-medium">
+                    {new Date(student.join_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                      <button 
+                        onClick={() => {
+                          setEditingStudent(student);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                      >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => setIsDeleteModalOpen(student.id)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -197,6 +238,16 @@ export default function Students() {
                   </td>
                 </tr>
               ))}
+              {filteredStudents.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-slate-400">
+                      <Users className="w-12 h-12 opacity-20" />
+                      <p className="text-sm font-medium">No students found</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -244,17 +295,17 @@ export default function Students() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <h2 className="text-xl font-bold text-slate-900">Add New Student</h2>
                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
               </div>
-              <form onSubmit={handleAddStudent} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
+              <form onSubmit={handleAddStudent} className="p-6 space-y-4 overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
                     <input 
                       required
@@ -272,6 +323,27 @@ export default function Students() {
                       className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
                       value={newStudent.class}
                       onChange={e => setNewStudent({...newStudent, class: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="e.g. Mathematics"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={newStudent.subject}
+                      onChange={e => setNewStudent({...newStudent, subject: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Address</label>
+                    <textarea 
+                      required
+                      rows={2}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none resize-none"
+                      value={newStudent.address}
+                      onChange={e => setNewStudent({...newStudent, address: e.target.value})}
                     />
                   </div>
                   <div>
@@ -304,6 +376,16 @@ export default function Students() {
                       onChange={e => setNewStudent({...newStudent, phone: e.target.value})}
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Joining Date</label>
+                    <input 
+                      required
+                      type="date" 
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={newStudent.join_date}
+                      onChange={e => setNewStudent({...newStudent, join_date: e.target.value})}
+                    />
+                  </div>
                 </div>
                 <div className="pt-4 flex gap-3">
                   <button 
@@ -318,6 +400,127 @@ export default function Students() {
                     className="flex-1 px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20"
                   >
                     Save Student
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Student Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && editingStudent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
+                <h2 className="text-xl font-bold text-slate-900">Edit Student</h2>
+                <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                  <Plus className="w-6 h-6 rotate-45" />
+                </button>
+              </div>
+              <form onSubmit={handleEditStudent} className="p-6 space-y-4 overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
+                    <input 
+                      required
+                      type="text" 
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={editingStudent.name}
+                      onChange={e => setEditingStudent({...editingStudent, name: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Class</label>
+                    <input 
+                      required
+                      type="text" 
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={editingStudent.class}
+                      onChange={e => setEditingStudent({...editingStudent, class: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="e.g. Mathematics"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={editingStudent.subject}
+                      onChange={e => setEditingStudent({...editingStudent, subject: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Address</label>
+                    <textarea 
+                      required
+                      rows={2}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none resize-none"
+                      value={editingStudent.address}
+                      onChange={e => setEditingStudent({...editingStudent, address: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Monthly Fee ($)</label>
+                    <input 
+                      required
+                      type="number" 
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={editingStudent.monthly_fee}
+                      onChange={e => setEditingStudent({...editingStudent, monthly_fee: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Lectures / Month</label>
+                    <input 
+                      required
+                      type="number" 
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={editingStudent.lectures_per_month}
+                      onChange={e => setEditingStudent({...editingStudent, lectures_per_month: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+                    <input 
+                      required
+                      type="tel" 
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={editingStudent.phone}
+                      onChange={e => setEditingStudent({...editingStudent, phone: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Joining Date</label>
+                    <input 
+                      required
+                      type="date" 
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                      value={editingStudent.join_date}
+                      onChange={e => setEditingStudent({...editingStudent, join_date: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="pt-4 flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
+                  >
+                    Update Student
                   </button>
                 </div>
               </form>

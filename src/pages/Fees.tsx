@@ -18,6 +18,7 @@ interface FeeRecord {
   student_id: string;
   amount: number;
   payment_date: string;
+  fee_month: string;
   status: 'paid' | 'due';
   students: {
     name: string;
@@ -41,6 +42,7 @@ export default function Fees() {
     student_id: "",
     amount: 0,
     payment_date: new Date().toISOString().split('T')[0],
+    fee_month: new Date().toISOString().slice(0, 7), // YYYY-MM format
     status: 'paid' as 'paid' | 'due'
   });
 
@@ -73,6 +75,23 @@ export default function Fees() {
     }
   };
 
+  const handleMarkAsPaid = async (id: string) => {
+    try {
+      const res = await fetch(`/api/fees/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: 'paid', payment_date: new Date().toISOString().split('T')[0] })
+      });
+      
+      if (!res.ok) throw res;
+      
+      fetchData();
+      showToast("Fee marked as paid!");
+    } catch (err: any) {
+      showToast("Failed to update fee status", "error");
+    }
+  };
+
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -91,6 +110,7 @@ export default function Fees() {
         student_id: "",
         amount: 0,
         payment_date: new Date().toISOString().split('T')[0],
+        fee_month: new Date().toISOString().slice(0, 7),
         status: 'paid'
       });
     } catch (err: any) {
@@ -105,108 +125,131 @@ export default function Fees() {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tuition Fees</h1>
-          <p className="text-slate-500 mt-1">Track payments, manage dues and generate financial reports.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">Tuition Fees</h1>
+          <p className="text-slate-500 mt-1 font-medium text-sm md:text-base">Track payments, manage dues and generate financial reports.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 w-full md:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Record Payment</span>
         </button>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm md:col-span-3">
-          <div className="flex items-center justify-between mb-6">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input 
-                type="text" 
-                placeholder="Search payments..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
-              />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-9 space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/30">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <input 
+                  type="text" 
+                  placeholder="Search payments..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
+                  <Filter className="w-4 h-4" />
+                </button>
+                <button className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
+                  <Download className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button className="p-2 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50">
-                <Filter className="w-4 h-4" />
-              </button>
-              <button className="p-2 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50">
-                <Download className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="text-slate-500 text-[10px] uppercase tracking-widest font-bold border-b border-slate-100">
-                  <th className="px-4 py-3">Student</th>
-                  <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {fees.map((fee) => (
-                  <tr key={fee.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-4 py-4">
-                      <p className="text-sm font-semibold text-slate-900">{fee.students.name}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="text-sm font-mono font-bold text-slate-700">${fee.amount}</span>
-                    </td>
-                    <td className="px-4 py-4 text-xs text-slate-500">
-                      {new Date(fee.payment_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={cn(
-                        "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter",
-                        fee.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
-                      )}>
-                        {fee.status}
-                      </span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-slate-400 text-[11px] uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/30">
+                    <th className="px-6 py-4">Student</th>
+                    <th className="px-6 py-4">Fee Month</th>
+                    <th className="px-6 py-4">Amount</th>
+                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {fees.map((fee) => (
+                    <tr key={fee.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{fee.students.name}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-slate-700">
+                          {fee.fee_month ? new Date(fee.fee_month + '-01').toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-mono font-bold text-slate-700">${fee.amount}</span>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-medium text-slate-500">
+                        {new Date(fee.payment_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                          fee.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                        )}>
+                          {fee.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {fee.status === 'due' && (
+                          <button 
+                            onClick={() => handleMarkAsPaid(fee.id)}
+                            className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-bold transition-colors"
+                          >
+                            Mark Paid
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {fees.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center gap-2 text-slate-400">
+                          <CreditCard className="w-12 h-12 opacity-20" />
+                          <p className="text-sm font-medium">No payment records found</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl">
-            <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-slate-500">Total Collected</p>
-                <p className="text-2xl font-bold text-emerald-400">
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700" />
+            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Financial Summary</h3>
+            <div className="space-y-6">
+              <div className="relative">
+                <p className="text-xs text-slate-500 font-medium mb-1">Total Collected</p>
+                <p className="text-3xl font-bold text-emerald-600 tracking-tight">
                   ${fees.filter(f => f.status === 'paid').reduce((acc, f) => acc + Number(f.amount), 0).toLocaleString()}
                 </p>
+                <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 w-full" />
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-slate-500">Total Outstanding</p>
-                <p className="text-2xl font-bold text-orange-400">
+              <div className="relative">
+                <p className="text-xs text-slate-500 font-medium mb-1">Total Outstanding</p>
+                <p className="text-3xl font-bold text-orange-600 tracking-tight">
                   ${fees.filter(f => f.status === 'due').reduce((acc, f) => acc + Number(f.amount), 0).toLocaleString()}
                 </p>
+                <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-orange-500 w-[30%]" />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Payment Methods</h3>
-            <div className="space-y-3">
-              {['Cash', 'Bank Transfer', 'Mobile Pay'].map(method => (
-                <div key={method} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-                    <CreditCard className="w-4 h-4" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-700">{method}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -256,6 +299,16 @@ export default function Fees() {
                     className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
                     value={newPayment.amount}
                     onChange={e => setNewPayment({...newPayment, amount: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Fee Month</label>
+                  <input 
+                    required
+                    type="month" 
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                    value={newPayment.fee_month}
+                    onChange={e => setNewPayment({...newPayment, fee_month: e.target.value})}
                   />
                 </div>
                 <div>
