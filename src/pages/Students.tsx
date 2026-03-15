@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { ToastContext } from "../context/ToastContext";
 import { db } from "../firebase";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, writeBatch } from "firebase/firestore";
+import { cn } from "../lib/utils";
 
 interface Student {
   id: string;
@@ -25,6 +26,8 @@ interface Student {
   address: string;
   monthly_fee: number;
   lectures_per_month: number;
+  lectures_per_week: number;
+  class_days: string[];
   join_date: string;
   photo?: string;
 }
@@ -45,6 +48,8 @@ export default function Students() {
     address: "",
     monthly_fee: 0,
     lectures_per_month: 12,
+    lectures_per_week: 3,
+    class_days: [],
     join_date: new Date().toISOString().split('T')[0],
     photo: ""
   });
@@ -250,7 +255,11 @@ export default function Students() {
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => {
-                          setEditingStudent(student);
+                          setEditingStudent({
+                            ...student,
+                            lectures_per_week: student.lectures_per_week || 3,
+                            class_days: student.class_days || []
+                          });
                           setIsEditModalOpen(true);
                         }}
                         className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
@@ -417,6 +426,42 @@ export default function Students() {
                         onChange={e => setNewStudent({...newStudent, lectures_per_month: Number(e.target.value)})}
                       />
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lectures / Week</label>
+                      <input 
+                        required
+                        type="number" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        placeholder="3"
+                        value={newStudent.lectures_per_week}
+                        onChange={e => setNewStudent({...newStudent, lectures_per_week: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Class Days</label>
+                      <div className="flex flex-wrap gap-2">
+                        {['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map(day => (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              const days = newStudent.class_days.includes(day) 
+                                ? newStudent.class_days.filter(d => d !== day)
+                                : [...newStudent.class_days, day];
+                              setNewStudent({...newStudent, class_days: days});
+                            }}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors",
+                              newStudent.class_days.includes(day)
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                            )}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Phone Number</label>
@@ -556,6 +601,41 @@ export default function Students() {
                         value={editingStudent.lectures_per_month}
                         onChange={e => setEditingStudent({...editingStudent, lectures_per_month: Number(e.target.value)})}
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lectures / Week</label>
+                      <input 
+                        required
+                        type="number" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                        value={editingStudent.lectures_per_week}
+                        onChange={e => setEditingStudent({...editingStudent, lectures_per_week: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Class Days</label>
+                      <div className="flex flex-wrap gap-2">
+                        {['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map(day => (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              const days = editingStudent.class_days?.includes(day) 
+                                ? editingStudent.class_days.filter(d => d !== day)
+                                : [...(editingStudent.class_days || []), day];
+                              setEditingStudent({...editingStudent, class_days: days});
+                            }}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors",
+                              editingStudent.class_days?.includes(day)
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                            )}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div>

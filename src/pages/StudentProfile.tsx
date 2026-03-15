@@ -26,6 +26,8 @@ interface Student {
   address: string;
   monthly_fee: number;
   lectures_per_month: number;
+  lectures_per_week: number;
+  class_days: string[];
   join_date: string;
   photo?: string;
 }
@@ -143,13 +145,33 @@ export default function StudentProfile() {
                     <p className="font-bold text-slate-700">{new Date(student.join_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-slate-600 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
-                    <Clock className="w-5 h-5" />
+                <div className="space-y-4 text-slate-600">
+                  <div className="flex items-center gap-4 group">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Lectures / Month</p>
+                      <p className="font-bold text-slate-700">{student.lectures_per_month || 12} Lectures</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Lectures / Month</p>
-                    <p className="font-bold text-slate-700">{student.lectures_per_month || 12} Lectures</p>
+                  <div className="flex items-center gap-4 group">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Lectures / Week</p>
+                      <p className="font-bold text-slate-700">{student.lectures_per_week || 3} Lectures</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 group">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Class Days</p>
+                      <p className="font-bold text-slate-700">{student.class_days?.join(', ') || 'N/A'}</p>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-slate-600 group">
@@ -212,6 +234,10 @@ export default function StudentProfile() {
               <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Months Paid</p>
                 <p className="text-3xl font-bold text-blue-600 tracking-tight">{fees.filter(f => f.status === 'paid').length}</p>
+              </div>
+              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Lectures Left</p>
+                <p className="text-3xl font-bold text-emerald-600 tracking-tight">{lecturesPerMonth - currentCycleAttendance}</p>
               </div>
             </div>
 

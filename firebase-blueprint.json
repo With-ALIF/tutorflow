@@ -13,6 +13,8 @@
         "address": { "type": "string", "description": "Address" },
         "monthly_fee": { "type": "number", "description": "Monthly fee" },
         "lectures_per_month": { "type": "number", "description": "Lectures per month" },
+        "lectures_per_week": { "type": "number", "description": "Lectures per week" },
+        "class_days": { "type": "array", "items": { "type": "string" }, "description": "Days of the week for classes" },
         "join_date": { "type": "string", "format": "date", "description": "Join date" }
       },
       "required": ["id", "name", "class", "phone"]
