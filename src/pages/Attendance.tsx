@@ -386,9 +386,13 @@ export default function Attendance() {
                 <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col h-full">
                   <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-2xl font-bold text-emerald-500 shadow-sm">
-                        {students.find(s => s.id === selectedStudentId)?.name.charAt(0)}
-                      </div>
+                      {students.find(s => s.id === selectedStudentId)?.photo ? (
+                        <img src={students.find(s => s.id === selectedStudentId)?.photo} alt={students.find(s => s.id === selectedStudentId)?.name} className="w-14 h-14 rounded-2xl object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-2xl font-bold text-emerald-500 shadow-sm">
+                          {students.find(s => s.id === selectedStudentId)?.name.charAt(0)}
+                        </div>
+                      )}
                       <div>
                         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                           {students.find(s => s.id === selectedStudentId)?.name}

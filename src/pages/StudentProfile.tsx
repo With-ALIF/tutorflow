@@ -289,6 +289,13 @@ export default function StudentProfile() {
               {fees.map((fee, idx) => (
                 <div key={idx} className="flex items-center justify-between p-5 rounded-2xl bg-white border border-slate-100 hover:border-blue-100 transition-colors group">
                   <div className="flex items-center gap-5">
+                    {student.photo ? (
+                      <img src={student.photo} alt={student.name} className="w-12 h-12 rounded-2xl object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center font-bold text-lg text-slate-400">
+                        {student.name.charAt(0)}
+                      </div>
+                    )}
                     <div className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110",
                       fee.status === 'paid' ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"

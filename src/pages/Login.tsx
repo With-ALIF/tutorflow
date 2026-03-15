@@ -114,7 +114,7 @@ export default function Login() {
           </button>
         </div>
         <div className="px-10 pb-10 text-center">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Powered by Tuition Hub v2.0</p>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Powered by Tuition Hub v1.0</p>
         </div>
       </motion.div>
     </div>

@@ -136,30 +136,22 @@ export default function Dashboard() {
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50/50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700" />
             
-            <div className="flex justify-between items-start mb-10 relative">
-              <div className={`${card.color} p-5 rounded-[1.25rem] text-white shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+            <div className="flex items-center justify-between mb-6 relative">
+              <div className={`${card.color} p-4 rounded-2xl text-white shadow-lg`}>
                 {typeof card.icon === 'string' ? (
-                  <img src={card.icon} alt={card.label} className="w-8 h-8 object-contain invert" referrerPolicy="no-referrer" />
+                  <img src={card.icon} alt={card.label} className="w-6 h-6 object-contain invert" referrerPolicy="no-referrer" />
                 ) : (
-                  <card.icon className="w-8 h-8" />
+                  <card.icon className="w-6 h-6" />
                 )}
               </div>
-              <Link to={card.link} className="p-2 bg-slate-50/80 rounded-xl text-slate-400 hover:text-slate-600 transition-all">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] leading-relaxed text-right flex-1 ml-4">{card.label}</p>
+              <Link to={card.link} className="p-2 bg-slate-50/80 rounded-xl text-slate-400 hover:text-slate-600 transition-all ml-4">
                 <ArrowUpRight className="w-5 h-5" />
               </Link>
             </div>
             
             <div className="relative mt-auto">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 leading-relaxed max-w-[120px]">{card.label}</p>
-              <h3 className="text-5xl font-black text-slate-900 tracking-tight mb-6">{card.value}</h3>
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-full">
-                  {card.trend.split(' ')[0]}
-                </span>
-                <span className="text-xs text-slate-400 font-medium leading-tight">
-                  {card.trend.split(' ').slice(1).join(' ')}
-                </span>
-              </div>
+              <h3 className="text-5xl font-black text-slate-900 tracking-tight">{card.value}</h3>
             </div>
           </motion.div>
         ))}

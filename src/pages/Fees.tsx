@@ -267,7 +267,10 @@ export default function Fees() {
                   ${fees.filter(f => f.status === 'due').reduce((acc, f) => acc + Number(f.amount), 0).toLocaleString()}
                 </p>
                 <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-orange-500 w-[30%]" />
+                  <div 
+                    className="h-full bg-orange-500" 
+                    style={{ width: `${(fees.filter(f => f.status === 'due').reduce((acc, f) => acc + Number(f.amount), 0) / (fees.reduce((acc, f) => acc + Number(f.amount), 0) || 1)) * 100}%` }}
+                  />
                 </div>
               </div>
             </div>
