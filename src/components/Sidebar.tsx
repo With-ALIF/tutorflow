@@ -5,6 +5,7 @@ import {
   Users, 
   CalendarCheck, 
   CreditCard, 
+  User,
   X,
   LogOut
 } from "lucide-react";
@@ -18,6 +19,7 @@ const navItems = [
   { icon: Users, label: "Students", path: "/students" },
   { icon: CalendarCheck, label: "Attendance", path: "/attendance" },
   { icon: CreditCard, label: "Tuition Fees", path: "/fees" },
+  { icon: User, label: "Profile", path: "/profile" },
 ];
 
 interface SidebarProps {

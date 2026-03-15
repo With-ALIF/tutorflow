@@ -138,11 +138,7 @@ export default function Dashboard() {
             
             <div className="flex items-center justify-between mb-6 relative">
               <div className={`${card.color} p-4 rounded-2xl text-white shadow-lg`}>
-                {typeof card.icon === 'string' ? (
-                  <img src={card.icon} alt={card.label} className="w-6 h-6 object-contain invert" referrerPolicy="no-referrer" />
-                ) : (
-                  <card.icon className="w-6 h-6" />
-                )}
+                <img src={card.icon} alt={card.label} className="w-6 h-6 object-contain invert" referrerPolicy="no-referrer" />
               </div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] leading-relaxed text-right flex-1 ml-4">{card.label}</p>
               <Link to={card.link} className="p-2 bg-slate-50/80 rounded-xl text-slate-400 hover:text-slate-600 transition-all ml-4">

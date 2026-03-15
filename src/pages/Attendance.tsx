@@ -384,7 +384,7 @@ export default function Attendance() {
             <div className="lg:col-span-2">
               {selectedStudentId ? (
                 <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col h-full">
-                  <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
+                  <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col gap-6">
                     <div className="flex items-center gap-4">
                       {students.find(s => s.id === selectedStudentId)?.photo ? (
                         <img src={students.find(s => s.id === selectedStudentId)?.photo} alt={students.find(s => s.id === selectedStudentId)?.name} className="w-14 h-14 rounded-2xl object-cover" referrerPolicy="no-referrer" />
@@ -401,7 +401,7 @@ export default function Attendance() {
                           const student = students.find(s => s.id === selectedStudentId);
                           const lecturesPerMonth = student?.lectures_per_month || 0;
                           const presentCount = studentHistory.filter(h => h.status === 'present').length;
-                          const months = lecturesPerMonth > 0 ? Math.floor(presentCount / lecturesPerMonth) : 0;
+                          const months = lecturesPerMonth >0 ? Math.floor(presentCount / lecturesPerMonth) : 0;
                           const days = lecturesPerMonth > 0 ? presentCount % lecturesPerMonth : presentCount;
                           return (
                             <p className="text-sm font-bold text-emerald-600 mt-1">
@@ -412,7 +412,7 @@ export default function Attendance() {
                         <p className="text-xs text-slate-500 font-medium">Detailed attendance logs and statistics.</p>
                       </div>
                     </div>
-                    <div className="text-right flex gap-6">
+                    <div className="flex gap-6">
                       {(() => {
                         const student = students.find(s => s.id === selectedStudentId);
                         const lecturesPerMonth = student?.lectures_per_month || 0;
@@ -420,15 +420,15 @@ export default function Attendance() {
                         const absentCount = studentHistory.filter(h => h.status === 'absent').length;
                         return (
                           <>
-                            <div>
+                            <div className="flex-1">
                               <div className="text-3xl font-black text-emerald-600 tracking-tighter">
-                                {presentCount} {lecturesPerMonth > 0 && <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>}
+                                {presentCount} <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>
                               </div>
                               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Present</div>
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <div className="text-3xl font-black text-red-600 tracking-tighter">
-                                {absentCount} {lecturesPerMonth > 0 && <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>}
+                                {absentCount} <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>
                               </div>
                               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Absent</div>
                             </div>

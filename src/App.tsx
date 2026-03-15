@@ -7,6 +7,7 @@ import Attendance from "./pages/Attendance";
 import Fees from "./pages/Fees";
 import StudentProfile from "./pages/StudentProfile";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import { auth } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { X, CheckCircle, AlertCircle } from "lucide-react";
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="students/:id" element={<StudentProfile />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="fees" element={<Fees />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
       </Router>

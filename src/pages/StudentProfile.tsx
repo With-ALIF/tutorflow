@@ -222,22 +222,14 @@ export default function StudentProfile() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 flex flex-col">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Present</p>
                 <p className="text-3xl font-bold text-emerald-600 tracking-tight">{totalPresent}</p>
               </div>
-              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
+              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 flex flex-col">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Absent</p>
                 <p className="text-3xl font-bold text-red-600 tracking-tight">{attendance.filter(a => a.status === 'absent').length}</p>
-              </div>
-              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Months Paid</p>
-                <p className="text-3xl font-bold text-blue-600 tracking-tight">{fees.filter(f => f.status === 'paid').length}</p>
-              </div>
-              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Lectures Left</p>
-                <p className="text-3xl font-bold text-emerald-600 tracking-tight">{lecturesPerMonth - currentCycleAttendance}</p>
               </div>
             </div>
 
@@ -287,34 +279,29 @@ export default function StudentProfile() {
             
             <div className="space-y-4">
               {fees.map((fee, idx) => (
-                <div key={idx} className="flex items-center justify-between p-5 rounded-2xl bg-white border border-slate-100 hover:border-blue-100 transition-colors group">
-                  <div className="flex items-center gap-5">
-                    {student.photo ? (
-                      <img src={student.photo} alt={student.name} className="w-12 h-12 rounded-2xl object-cover" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center font-bold text-lg text-slate-400">
-                        {student.name.charAt(0)}
+                <div key={idx} className="flex flex-col p-5 rounded-2xl bg-white border border-slate-100 hover:border-blue-100 transition-colors group gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110",
+                        fee.status === 'paid' ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"
+                      )}>
+                        <CreditCard className="w-6 h-6" />
                       </div>
-                    )}
-                    <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110",
-                      fee.status === 'paid' ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"
-                    )}>
-                      <CreditCard className="w-6 h-6" />
+                      <div>
+                        <p className="text-lg font-bold text-slate-900 tracking-tight">${fee.amount}</p>
+                        <p className="text-xs text-slate-400 font-medium">{new Date(fee.payment_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-lg font-bold text-slate-900 tracking-tight">${fee.amount}</p>
-                      <p className="text-xs text-slate-400 font-medium">{new Date(fee.payment_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={cn(
+                        "px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest",
+                        fee.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                      )}>
+                        {fee.status}
+                      </span>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Confirmed</p>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={cn(
-                      "px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest",
-                      fee.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
-                    )}>
-                      {fee.status}
-                    </span>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Confirmed</p>
                   </div>
                 </div>
               ))}
