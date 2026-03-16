@@ -13,7 +13,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { ToastContext } from "../context/ToastContext";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, writeBatch } from "firebase/firestore";
 import { cn } from "../lib/utils";
 
@@ -76,7 +76,9 @@ export default function Students() {
 
   const fetchStudents = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "students"));
+      if (!auth.currentUser) return;
+      const q = query(collection(db, "students"), where("userId", "==", auth.currentUser.uid));
+      const querySnapshot = await getDocs(q);
       const studentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsData);
     } catch (err) {
@@ -88,8 +90,13 @@ export default function Students() {
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth.currentUser) return;
     try {
-      await addDoc(collection(db, "students"), newStudent);
+      await addDoc(collection(db, "students"), {
+        ...newStudent,
+        userId: auth.currentUser.uid,
+        created_at: new Date().toISOString()
+      });
       setIsModalOpen(false);
       fetchStudents();
       showToast("Student added successfully!");
@@ -101,6 +108,8 @@ export default function Students() {
         address: "",
         monthly_fee: 0,
         lectures_per_month: 12,
+        lectures_per_week: 3,
+        class_days: [],
         join_date: new Date().toISOString().split('T')[0],
         photo: ""
       });
@@ -129,17 +138,20 @@ export default function Students() {
 
   const confirmDelete = async (id: string) => {
     try {
+      if (!auth.currentUser) return;
       const batch = writeBatch(db);
       
       // Delete student
       batch.delete(doc(db, "students", id));
       
       // Delete associated fees
-      const feesQuery = query(collection(db, "fees"), where("student_id", "==", id));
+      const feesQuery = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
       const feesSnapshot = await getDocs(feesQuery);
-      feesSnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
+      feesSnapshot.docs
+        .filter(doc => doc.data().student_id === id)
+        .forEach((doc) => {
+          batch.delete(doc.ref);
+        });
       
       await batch.commit();
       

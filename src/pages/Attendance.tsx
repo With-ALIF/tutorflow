@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { format, parseISO } from "date-fns";
 import { cn } from "../lib/utils";
 import { ToastContext } from "../context/ToastContext";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { collection, getDocs, query, where, orderBy, doc, setDoc, getDoc, addDoc, getCountFromServer } from "firebase/firestore";
 
 interface Student {
@@ -96,7 +96,9 @@ export default function Attendance() {
 
   const fetchStudents = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "students"));
+      if (!auth.currentUser) return;
+      const q = query(collection(db, "students"), where("userId", "==", auth.currentUser.uid));
+      const querySnapshot = await getDocs(q);
       const studentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsData.sort((a, b) => a.name.localeCompare(b.name)));
       setLoading(false);
@@ -109,7 +111,8 @@ export default function Attendance() {
 
   const fetchDailyAttendance = async () => {
     try {
-      const q = query(collection(db, "attendance"), where("date", "==", date));
+      if (!auth.currentUser) return;
+      const q = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid), where("date", "==", date));
       const querySnapshot = await getDocs(q);
       const initialRecords: Record<string, 'present' | 'absent'> = {};
       querySnapshot.docs.forEach(doc => {
@@ -126,9 +129,13 @@ export default function Attendance() {
   const fetchStudentHistory = async () => {
     setFetchingHistory(true);
     try {
-      const q = query(collection(db, "attendance"), where("student_id", "==", selectedStudentId), orderBy("date", "desc"));
+      if (!auth.currentUser) return;
+      const q = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid));
       const querySnapshot = await getDocs(q);
-      const historyData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
+      const historyData = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord))
+        .filter(record => record.student_id === selectedStudentId)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setStudentHistory(historyData);
     } catch (err) {
       console.error("Error fetching student history:", err);
@@ -141,6 +148,7 @@ export default function Attendance() {
   const fetchMonthlyReport = async () => {
     setFetchingReport(true);
     try {
+      if (!auth.currentUser) return;
       // Fetch all attendance for the month
       // Since we can't easily query by prefix in Firestore without a specific index,
       // and dates are stored as "yyyy-MM-dd", we can query between start and end of month.
@@ -149,8 +157,7 @@ export default function Attendance() {
       
       const q = query(
         collection(db, "attendance"), 
-        where("date", ">=", startDate),
-        where("date", "<=", endDate)
+        where("userId", "==", auth.currentUser.uid)
       );
       
       const querySnapshot = await getDocs(q);
@@ -158,13 +165,15 @@ export default function Attendance() {
       
       querySnapshot.docs.forEach(doc => {
         const record = doc.data() as AttendanceRecord;
-        if (!data[record.student_id]) {
-          data[record.student_id] = { present: 0, absent: 0 };
-        }
-        if (record.status === 'present') {
-          data[record.student_id].present++;
-        } else {
-          data[record.student_id].absent++;
+        if (record.date >= startDate && record.date <= endDate) {
+          if (!data[record.student_id]) {
+            data[record.student_id] = { present: 0, absent: 0 };
+          }
+          if (record.status === 'present') {
+            data[record.student_id].present++;
+          } else {
+            data[record.student_id].absent++;
+          }
         }
       });
       
@@ -184,11 +193,23 @@ export default function Attendance() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      if (!auth.currentUser) return;
+      
+      // Fetch all attendance and fees for the user to avoid composite index requirements
+      const allAttendanceQ = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid));
+      const allAttendanceSnapshot = await getDocs(allAttendanceQ);
+      const allAttendance = allAttendanceSnapshot.docs.map(doc => doc.data() as AttendanceRecord);
+      
+      const allFeesQ = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
+      const allFeesSnapshot = await getDocs(allFeesQ);
+      const allFees = allFeesSnapshot.docs.map(doc => doc.data());
+
       for (const [studentId, status] of Object.entries(records)) {
         const attendanceId = `${studentId}_${date}`;
         const attendanceRef = doc(db, "attendance", attendanceId);
         await setDoc(attendanceRef, {
           student_id: studentId,
+          userId: auth.currentUser.uid,
           date,
           status,
           created_at: new Date().toISOString()
@@ -199,24 +220,33 @@ export default function Attendance() {
           const student = students.find(s => s.id === studentId);
           if (student) {
             const lecturesPerMonth = student.lectures_per_month || 12;
-            const q = query(collection(db, "attendance"), where("student_id", "==", studentId), where("status", "==", "present"));
-            const snapshot = await getCountFromServer(q);
-            const count = snapshot.data().count;
+            
+            // Calculate present count from memory, including the current record if it wasn't already present
+            let count = allAttendance.filter(a => a.student_id === studentId && a.status === 'present').length;
+            const existingRecord = allAttendance.find(a => a.student_id === studentId && a.date === date);
+            if (!existingRecord || existingRecord.status !== 'present') {
+              count++;
+            }
 
             if (count > 0 && count % lecturesPerMonth === 0) {
               const recordMonth = date.slice(0, 7);
-              const feeQ = query(collection(db, "fees"), where("student_id", "==", studentId), where("fee_month", "==", recordMonth));
-              const feeSnapshot = await getDocs(feeQ);
+              const feeExists = allFees.some(f => f.student_id === studentId && f.fee_month === recordMonth);
               
-              if (feeSnapshot.empty) {
+              if (!feeExists) {
                 await addDoc(collection(db, "fees"), {
                   student_id: studentId,
+                  userId: auth.currentUser.uid,
                   amount: student.monthly_fee || 0,
                   payment_date: date,
                   fee_month: recordMonth,
                   status: 'due',
                   created_at: new Date().toISOString()
                 });
+                // Add to in-memory array to prevent duplicate fees in the same save operation
+                allFees.push({
+                  student_id: studentId,
+                  fee_month: recordMonth
+                } as any);
               }
             }
           }

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { ToastContext } from "../context/ToastContext";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 import { cn } from "../lib/utils";
 
@@ -31,7 +31,9 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const studentsSnapshot = await getDocs(collection(db, "students"));
+        if (!auth.currentUser) return;
+        const studentsQuery = query(collection(db, "students"), where("userId", "==", auth.currentUser.uid));
+        const studentsSnapshot = await getDocs(studentsQuery);
         const totalStudents = studentsSnapshot.size;
         const studentsMap = new Map();
         studentsSnapshot.docs.forEach(doc => {
@@ -40,7 +42,7 @@ export default function Dashboard() {
         const studentIds = new Set(studentsMap.keys());
 
         const currentMonth = new Date().toISOString().slice(0, 7);
-        const feesQuery = query(collection(db, "fees"), where("fee_month", "==", currentMonth));
+        const feesQuery = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
         const feesSnapshot = await getDocs(feesQuery);
         
         let monthlyIncome = 0;
@@ -49,6 +51,7 @@ export default function Dashboard() {
 
         feesSnapshot.forEach(doc => {
           const data = doc.data();
+          if (data.fee_month !== currentMonth) return;
           if (!studentIds.has(data.student_id)) return;
           if (data.status === 'paid') {
             monthlyIncome += data.amount;
@@ -62,16 +65,19 @@ export default function Dashboard() {
           }
         });
 
-        const recentActivityQuery = query(collection(db, "attendance"), orderBy("created_at", "desc"), limit(5));
+        const recentActivityQuery = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid));
         const recentActivitySnapshot = await getDocs(recentActivityQuery);
-        const recentActivity = recentActivitySnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            studentName: studentsMap.get(data.student_id) || 'Unknown Student',
-            ...data
-          };
-        });
+        const recentActivity = recentActivitySnapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              studentName: studentsMap.get(data.student_id) || 'Unknown Student',
+              ...data
+            };
+          })
+          .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 5);
 
         setStats({
           totalStudents,

@@ -14,8 +14,8 @@ import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { ToastContext } from "../context/ToastContext";
-import { db } from "../firebase";
-import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy, where } from "firebase/firestore";
 
 interface FeeRecord {
   id: string;
@@ -56,11 +56,13 @@ export default function Fees() {
 
   const fetchData = async () => {
     try {
-      const studentsSnapshot = await getDocs(collection(db, "students"));
+      if (!auth.currentUser) return;
+      const studentsQuery = query(collection(db, "students"), where("userId", "==", auth.currentUser.uid));
+      const studentsSnapshot = await getDocs(studentsQuery);
       const studentsData = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsData);
 
-      const feesQuery = query(collection(db, "fees"), orderBy("payment_date", "desc"));
+      const feesQuery = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
       const feesSnapshot = await getDocs(feesQuery);
       const feesData = feesSnapshot.docs
         .map(doc => {
@@ -72,7 +74,8 @@ export default function Fees() {
             students: student ? { name: student.name } : null
           };
         })
-        .filter(fee => fee.students !== null) as FeeRecord[];
+        .filter(fee => fee.students !== null)
+        .sort((a: any, b: any) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()) as FeeRecord[];
 
       setFees(feesData);
       setLoading(false);
@@ -121,8 +124,10 @@ export default function Fees() {
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (!auth.currentUser) return;
       await addDoc(collection(db, "fees"), {
         ...newPayment,
+        userId: auth.currentUser.uid,
         created_at: new Date().toISOString()
       });
       

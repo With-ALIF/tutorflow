@@ -6,6 +6,7 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
         "name": { "type": "string", "description": "Full name" },
         "class": { "type": "string", "description": "Class name" },
         "phone": { "type": "string", "description": "Phone number" },
@@ -17,7 +18,7 @@
         "class_days": { "type": "array", "items": { "type": "string" }, "description": "Days of the week for classes" },
         "join_date": { "type": "string", "format": "date", "description": "Join date" }
       },
-      "required": ["id", "name", "class", "phone"]
+      "required": ["id", "userId", "name", "class", "phone"]
     },
     "Attendance": {
       "title": "Attendance",
@@ -25,12 +26,13 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
         "student_id": { "type": "string", "description": "Student ID" },
         "date": { "type": "string", "format": "date", "description": "Date of attendance" },
         "status": { "type": "string", "enum": ["present", "absent"], "description": "Attendance status" },
         "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
       },
-      "required": ["student_id", "date", "status"]
+      "required": ["userId", "student_id", "date", "status"]
     },
     "Fee": {
       "title": "Fee",
@@ -38,6 +40,7 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
         "student_id": { "type": "string", "description": "Student ID" },
         "amount": { "type": "number", "description": "Fee amount" },
         "payment_date": { "type": "string", "format": "date", "description": "Date of payment" },
@@ -45,7 +48,7 @@
         "status": { "type": "string", "enum": ["paid", "due"], "description": "Fee status" },
         "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
       },
-      "required": ["student_id", "amount", "fee_month", "status"]
+      "required": ["userId", "student_id", "amount", "fee_month", "status"]
     }
   },
   "firestore": {

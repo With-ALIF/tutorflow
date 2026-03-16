@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { doc, getDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore";
 
 interface Student {
@@ -41,20 +41,36 @@ export default function StudentProfile() {
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (!id) return;
+      if (!id || !auth.currentUser) return;
       try {
         const studentDoc = await getDoc(doc(db, "students", id));
         if (studentDoc.exists()) {
-          setStudent({ id: studentDoc.id, ...studentDoc.data() } as Student);
+          const data = studentDoc.data();
+          if (data.userId !== auth.currentUser.uid) {
+            setStudent(null);
+            return;
+          }
+          setStudent({ id: studentDoc.id, ...data } as Student);
+        } else {
+          setStudent(null);
+          return;
         }
 
-        const attendanceQuery = query(collection(db, "attendance"), where("student_id", "==", id), orderBy("date", "desc"));
+        const attendanceQuery = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid));
         const attendanceSnapshot = await getDocs(attendanceQuery);
-        setAttendance(attendanceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setAttendance(attendanceSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter((a: any) => a.student_id === id)
+          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        );
 
-        const feesQuery = query(collection(db, "fees"), where("student_id", "==", id), orderBy("payment_date", "desc"));
+        const feesQuery = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
         const feesSnapshot = await getDocs(feesQuery);
-        setFees(feesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setFees(feesSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter((f: any) => f.student_id === id)
+          .sort((a: any, b: any) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime())
+        );
 
       } catch (error) {
         console.error("Error fetching student profile data:", error);

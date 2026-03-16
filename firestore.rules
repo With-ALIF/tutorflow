@@ -6,29 +6,33 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // Assumed Data Model
-    // Collection: students
-    // Fields:
-    //   - id: string (required)
-    //   - name: string (required)
-    //   - class: string (required)
-    //   - phone: string (required)
-    //   - subject: string (optional)
-    //   - address: string (optional)
-    //   - monthly_fee: number (optional)
-    //   - lectures_per_month: number (optional)
-    //   - join_date: string (optional)
+    function isOwner() {
+      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
 
     match /students/{studentId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isDocOwner();
+      allow create: if isOwner();
+      allow update: if isDocOwner() && isOwner();
+      allow delete: if isDocOwner();
     }
 
     match /attendance/{attendanceId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isDocOwner();
+      allow create: if isOwner();
+      allow update: if isDocOwner() && isOwner();
+      allow delete: if isDocOwner();
     }
 
     match /fees/{feeId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isDocOwner();
+      allow create: if isOwner();
+      allow update: if isDocOwner() && isOwner();
+      allow delete: if isDocOwner();
     }
   }
 }
