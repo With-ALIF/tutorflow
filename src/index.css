@@ -8,6 +8,8 @@
 
 @layer base {
   body {
-    @apply font-sans text-slate-900 antialiased;
+    @apply font-sans text-slate-900 antialiased dark:text-slate-100;
   }
 }
+
+@variant dark (&:where(.dark, .dark *));

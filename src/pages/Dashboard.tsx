@@ -5,12 +5,15 @@ import {
   TrendingUp, 
   AlertCircle, 
   ArrowUpRight,
-  Calendar
+  Calendar,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { motion } from "motion/react";
 import { ToastContext } from "../context/ToastContext";
 import { db } from "../firebase";
 import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+import { cn } from "../lib/utils";
 
 interface Stats {
   totalStudents: number;
@@ -30,7 +33,11 @@ export default function Dashboard() {
       try {
         const studentsSnapshot = await getDocs(collection(db, "students"));
         const totalStudents = studentsSnapshot.size;
-        const studentIds = new Set(studentsSnapshot.docs.map(doc => doc.id));
+        const studentsMap = new Map();
+        studentsSnapshot.docs.forEach(doc => {
+          studentsMap.set(doc.id, doc.data().name);
+        });
+        const studentIds = new Set(studentsMap.keys());
 
         const currentMonth = new Date().toISOString().slice(0, 7);
         const feesQuery = query(collection(db, "fees"), where("fee_month", "==", currentMonth));
@@ -47,13 +54,24 @@ export default function Dashboard() {
             monthlyIncome += data.amount;
           } else {
             totalDueBalance += data.amount;
-            upcomingFees.push({ id: doc.id, ...data });
+            upcomingFees.push({ 
+              id: doc.id, 
+              studentName: studentsMap.get(data.student_id) || 'Unknown Student',
+              ...data 
+            });
           }
         });
 
-        const recentActivityQuery = query(collection(db, "attendance"), orderBy("date", "desc"), limit(5));
+        const recentActivityQuery = query(collection(db, "attendance"), orderBy("created_at", "desc"), limit(5));
         const recentActivitySnapshot = await getDocs(recentActivityQuery);
-        const recentActivity = recentActivitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const recentActivity = recentActivitySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            studentName: studentsMap.get(data.student_id) || 'Unknown Student',
+            ...data
+          };
+        });
 
         setStats({
           totalStudents,
@@ -121,8 +139,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-10">
       <header>
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h1>
-        <p className="text-slate-500 mt-1 font-medium text-sm md:text-base">Welcome back! Here's what's happening with your tuition center today.</p>
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard Overview</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm md:text-base">Welcome back! Here's what's happening with your tuition center today.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -132,25 +150,104 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 group relative overflow-hidden flex flex-col"
+            className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 group relative overflow-hidden flex flex-col"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50/50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 dark:bg-slate-700/50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700" />
             
             <div className="flex items-center justify-between mb-6 relative">
               <div className={`${card.color} p-4 rounded-2xl text-white shadow-lg`}>
                 <img src={card.icon} alt={card.label} className="w-6 h-6 object-contain invert" referrerPolicy="no-referrer" />
               </div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] leading-relaxed text-right flex-1 ml-4">{card.label}</p>
-              <Link to={card.link} className="p-2 bg-slate-50/80 rounded-xl text-slate-400 hover:text-slate-600 transition-all ml-4">
+              <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] leading-relaxed text-right flex-1 ml-4">{card.label}</p>
+              <Link to={card.link} className="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-white transition-all ml-4">
                 <ArrowUpRight className="w-5 h-5" />
               </Link>
             </div>
             
             <div className="relative mt-auto">
-              <h3 className="text-5xl font-black text-slate-900 tracking-tight">{card.value}</h3>
+              <h3 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight">{card.value}</h3>
             </div>
           </motion.div>
         ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden"
+        >
+          <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Recent Attendance</h2>
+            <Link to="/attendance" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">View All</Link>
+          </div>
+          <div className="p-6">
+            {stats?.recentActivity.length ? (
+              <div className="space-y-6">
+                {stats.recentActivity.map((activity, idx) => (
+                  <div key={idx} className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center",
+                      activity.status === 'present' 
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                        : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+                    )}>
+                      {activity.status === 'present' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{activity.studentName}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{activity.date}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg",
+                        activity.status === 'present'
+                          ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+                      )}>
+                        {activity.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-slate-500 dark:text-slate-400 py-8">No recent activity</p>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden"
+        >
+          <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Due Fees</h2>
+            <Link to="/fees" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">Manage Fees</Link>
+          </div>
+          <div className="p-6">
+            {stats?.upcomingFees.length ? (
+              <div className="space-y-6">
+                {stats.upcomingFees.map((fee, idx) => (
+                  <div key={idx} className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500">
+                      <AlertCircle className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{fee.studentName}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Month: {fee.fee_month}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-slate-900 dark:text-white">${fee.amount}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-slate-500 dark:text-slate-400 py-8">No pending fees</p>
+            )}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

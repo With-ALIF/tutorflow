@@ -38,7 +38,7 @@ interface AttendanceRecord {
 
 export default function Attendance() {
   const { showToast } = useContext(ToastContext);
-  const [activeTab, setActiveTab] = useState<'mark' | 'history'>('mark');
+  const [activeTab, setActiveTab] = useState<'mark' | 'history' | 'report'>('mark');
   const [students, setStudents] = useState<Student[]>([]);
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [records, setRecords] = useState<Record<string, 'present' | 'absent'>>({});
@@ -50,6 +50,11 @@ export default function Attendance() {
   const [studentHistory, setStudentHistory] = useState<AttendanceRecord[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [fetchingHistory, setFetchingHistory] = useState(false);
+
+  // Report state
+  const [reportMonth, setReportMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [reportData, setReportData] = useState<Record<string, { present: number, absent: number }>>({});
+  const [fetchingReport, setFetchingReport] = useState(false);
 
   useEffect(() => {
     setSelectedMonth("");
@@ -82,6 +87,12 @@ export default function Attendance() {
       fetchStudentHistory();
     }
   }, [selectedStudentId, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'report') {
+      fetchMonthlyReport();
+    }
+  }, [reportMonth, activeTab]);
 
   const fetchStudents = async () => {
     try {
@@ -127,6 +138,45 @@ export default function Attendance() {
     }
   };
 
+  const fetchMonthlyReport = async () => {
+    setFetchingReport(true);
+    try {
+      // Fetch all attendance for the month
+      // Since we can't easily query by prefix in Firestore without a specific index,
+      // and dates are stored as "yyyy-MM-dd", we can query between start and end of month.
+      const startDate = `${reportMonth}-01`;
+      const endDate = `${reportMonth}-31`; // Simple enough for string comparison
+      
+      const q = query(
+        collection(db, "attendance"), 
+        where("date", ">=", startDate),
+        where("date", "<=", endDate)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const data: Record<string, { present: number, absent: number }> = {};
+      
+      querySnapshot.docs.forEach(doc => {
+        const record = doc.data() as AttendanceRecord;
+        if (!data[record.student_id]) {
+          data[record.student_id] = { present: 0, absent: 0 };
+        }
+        if (record.status === 'present') {
+          data[record.student_id].present++;
+        } else {
+          data[record.student_id].absent++;
+        }
+      });
+      
+      setReportData(data);
+    } catch (err) {
+      console.error("Error fetching monthly report:", err);
+      showToast("Failed to fetch monthly report", "error");
+    } finally {
+      setFetchingReport(false);
+    }
+  };
+
   const handleStatusChange = (studentId: string, status: 'present' | 'absent') => {
     setRecords(prev => ({ ...prev, [studentId]: status }));
   };
@@ -154,16 +204,16 @@ export default function Attendance() {
             const count = snapshot.data().count;
 
             if (count > 0 && count % lecturesPerMonth === 0) {
-              const currentMonth = new Date().toISOString().slice(0, 7);
-              const feeQ = query(collection(db, "fees"), where("student_id", "==", studentId), where("fee_month", "==", currentMonth));
+              const recordMonth = date.slice(0, 7);
+              const feeQ = query(collection(db, "fees"), where("student_id", "==", studentId), where("fee_month", "==", recordMonth));
               const feeSnapshot = await getDocs(feeQ);
               
               if (feeSnapshot.empty) {
                 await addDoc(collection(db, "fees"), {
                   student_id: studentId,
                   amount: student.monthly_fee || 0,
-                  payment_date: new Date().toISOString().split('T')[0],
-                  fee_month: currentMonth,
+                  payment_date: date,
+                  fee_month: recordMonth,
                   status: 'due',
                   created_at: new Date().toISOString()
                 });
@@ -188,16 +238,18 @@ export default function Attendance() {
     <div className="space-y-10">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">Attendance Management</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">Attendance Management</h1>
           <p className="text-slate-500 mt-1 font-medium text-sm md:text-base">Mark daily presence or view student attendance history.</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full md:w-auto">
           <button 
             onClick={() => setActiveTab('mark')}
             className={cn(
               "flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 sm:flex-none",
-              activeTab === 'mark' ? "bg-white text-emerald-600 shadow-md" : "text-slate-500 hover:text-slate-700"
+              activeTab === 'mark' 
+                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-md" 
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
             <UserCheck className="w-4 h-4" />
@@ -207,11 +259,25 @@ export default function Attendance() {
             onClick={() => setActiveTab('history')}
             className={cn(
               "flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 sm:flex-none",
-              activeTab === 'history' ? "bg-white text-emerald-600 shadow-md" : "text-slate-500 hover:text-slate-700"
+              activeTab === 'history' 
+                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-md" 
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
             <History className="w-4 h-4" />
             <span>History</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('report')}
+            className={cn(
+              "flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 sm:flex-none",
+              activeTab === 'report' 
+                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-md" 
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            )}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Report</span>
           </button>
         </div>
       </header>
@@ -226,22 +292,22 @@ export default function Attendance() {
             className="space-y-8"
           >
             <div className="flex items-center justify-end">
-              <div className="flex items-center gap-3 bg-white p-2.5 rounded-2xl border border-slate-200/60 shadow-sm">
+              <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-2.5 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm">
                 <button 
                   onClick={() => {
                     const d = new Date(date);
                     d.setDate(d.getDate() - 1);
                     setDate(format(d, "yyyy-MM-dd"));
                   }}
-                  className="p-2.5 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors active:scale-90"
+                  className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-slate-400 dark:text-slate-500 transition-colors active:scale-90"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <div className="flex items-center gap-3 px-4 border-x border-slate-100">
+                <div className="flex items-center gap-3 px-4 border-x border-slate-100 dark:border-slate-700">
                   <Calendar className="w-5 h-5 text-emerald-500" />
                   <input 
                     type="date" 
-                    className="font-bold text-slate-700 focus:outline-none bg-transparent"
+                    className="font-bold text-slate-700 dark:text-slate-300 focus:outline-none bg-transparent"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                   />
@@ -252,40 +318,40 @@ export default function Attendance() {
                     d.setDate(d.getDate() + 1);
                     setDate(format(d, "yyyy-MM-dd"));
                   }}
-                  className="p-2.5 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors active:scale-90"
+                  className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-slate-400 dark:text-slate-500 transition-colors active:scale-90"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="text-slate-400 text-[11px] uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/30">
+                    <tr className="text-slate-400 dark:text-slate-500 text-[11px] uppercase tracking-widest font-bold border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30">
                       <th className="px-8 py-5">Student</th>
                       <th className="px-8 py-5">Class</th>
                       <th className="px-8 py-5 text-center">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                     {students.map((student) => (
-                      <tr key={student.id} className="hover:bg-slate-50/30 transition-colors group">
+                      <tr key={student.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-700/30 transition-colors group">
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-4">
                             {student.photo ? (
                               <img src={student.photo} alt={student.name} className="w-10 h-10 rounded-xl object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                                 {student.name.charAt(0)}
                               </div>
                             )}
-                            <span className="font-bold text-slate-900">{student.name}</span>
+                            <span className="font-bold text-slate-900 dark:text-white">{student.name}</span>
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold uppercase tracking-widest">{student.class}</span>
+                          <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full text-[10px] font-bold uppercase tracking-widest">{student.class}</span>
                         </td>
                         <td className="px-8 py-5">
                           <div className="flex items-center justify-center gap-2 sm:gap-4">
@@ -295,7 +361,7 @@ export default function Attendance() {
                                 "flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-2xl text-[10px] sm:text-xs font-bold transition-all border-2",
                                 records[student.id] === 'present'
                                   ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30 scale-105"
-                                  : "bg-white text-slate-400 border-slate-100 hover:border-emerald-200 hover:text-emerald-600 active:scale-95"
+                                  : "bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-800 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-95"
                               )}
                             >
                               <CheckCircle2 className="w-4 h-4" />
@@ -307,7 +373,7 @@ export default function Attendance() {
                                 "flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-2xl text-[10px] sm:text-xs font-bold transition-all border-2",
                                 records[student.id] === 'absent'
                                   ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/30 scale-105"
-                                  : "bg-white text-slate-400 border-slate-100 hover:border-red-200 hover:text-red-600 active:scale-95"
+                                  : "bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-800 hover:text-red-600 dark:hover:text-red-400 active:scale-95"
                               )}
                             >
                               <XCircle className="w-4 h-4" />
@@ -332,7 +398,7 @@ export default function Attendance() {
               </div>
             </div>
           </motion.div>
-        ) : (
+        ) : activeTab === 'history' ? (
           <motion.div 
             key="history"
             initial={{ opacity: 0, y: 20 }}
@@ -341,12 +407,12 @@ export default function Attendance() {
             className="grid grid-cols-1 lg:grid-cols-3 gap-10"
           >
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                     <Search className="w-5 h-5" />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Select Student</h2>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Select Student</h2>
                 </div>
                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                   {students.map((student) => (
@@ -356,25 +422,32 @@ export default function Attendance() {
                       className={cn(
                         "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all text-left group",
                         selectedStudentId === student.id
-                          ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                          : "bg-white border-slate-50 hover:border-emerald-100 hover:bg-slate-50/50"
+                          ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 shadow-sm"
+                          : "bg-white dark:bg-slate-800 border-slate-50 dark:border-slate-700 hover:border-emerald-100 dark:hover:border-emerald-500/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/50"
                       )}
                     >
                       <div className="flex items-center gap-4">
                         <div className={cn(
                           "w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-colors",
-                          selectedStudentId === student.id ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600"
+                          selectedStudentId === student.id 
+                            ? "bg-emerald-500 text-white" 
+                            : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
                         )}>
                           {student.name.charAt(0)}
                         </div>
                         <div>
-                          <p className={cn("text-sm font-bold transition-colors", selectedStudentId === student.id ? "text-emerald-900" : "text-slate-900 group-hover:text-emerald-600")}>
+                          <p className={cn(
+                            "text-sm font-bold transition-colors", 
+                            selectedStudentId === student.id 
+                              ? "text-emerald-900 dark:text-emerald-400" 
+                              : "text-slate-900 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
+                          )}>
                             {student.name}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{student.class}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">{student.class}</p>
                         </div>
                       </div>
-                      <ArrowRight className={cn("w-4 h-4 transition-all", selectedStudentId === student.id ? "text-emerald-500 translate-x-1" : "text-slate-200 opacity-0 group-hover:opacity-100 group-hover:translate-x-1")} />
+                      <ArrowRight className={cn("w-4 h-4 transition-all", selectedStudentId === student.id ? "text-emerald-500 translate-x-1" : "text-slate-200 dark:text-slate-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1")} />
                     </button>
                   ))}
                 </div>
@@ -383,18 +456,18 @@ export default function Attendance() {
 
             <div className="lg:col-span-2">
               {selectedStudentId ? (
-                <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col h-full">
-                  <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col gap-6">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
+                  <div className="p-8 border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30 flex flex-col gap-6">
                     <div className="flex items-center gap-4">
                       {students.find(s => s.id === selectedStudentId)?.photo ? (
                         <img src={students.find(s => s.id === selectedStudentId)?.photo} alt={students.find(s => s.id === selectedStudentId)?.name} className="w-14 h-14 rounded-2xl object-cover" referrerPolicy="no-referrer" />
                       ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-2xl font-bold text-emerald-500 shadow-sm">
+                        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 flex items-center justify-center text-2xl font-bold text-emerald-500 shadow-sm">
                           {students.find(s => s.id === selectedStudentId)?.name.charAt(0)}
                         </div>
                       )}
                       <div>
-                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                           {students.find(s => s.id === selectedStudentId)?.name}
                         </h2>
                         {(() => {
@@ -404,12 +477,12 @@ export default function Attendance() {
                           const months = lecturesPerMonth >0 ? Math.floor(presentCount / lecturesPerMonth) : 0;
                           const days = lecturesPerMonth > 0 ? presentCount % lecturesPerMonth : presentCount;
                           return (
-                            <p className="text-sm font-bold text-emerald-600 mt-1">
+                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                               {months} মাস {days.toString().padStart(2, '0')} দিন
                             </p>
                           );
                         })()}
-                        <p className="text-xs text-slate-500 font-medium">Detailed attendance logs and statistics.</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Detailed attendance logs and statistics.</p>
                       </div>
                     </div>
                     <div className="flex gap-6">
@@ -421,16 +494,16 @@ export default function Attendance() {
                         return (
                           <>
                             <div className="flex-1">
-                              <div className="text-3xl font-black text-emerald-600 tracking-tighter">
-                                {presentCount} <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>
+                              <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">
+                                {presentCount} <span className="text-sm text-slate-400 dark:text-slate-500 font-medium">/ {lecturesPerMonth}</span>
                               </div>
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Present</div>
+                              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Present</div>
                             </div>
                             <div className="flex-1">
-                              <div className="text-3xl font-black text-red-600 tracking-tighter">
-                                {absentCount} <span className="text-sm text-slate-400 font-medium">/ {lecturesPerMonth}</span>
+                              <div className="text-3xl font-black text-red-600 dark:text-red-400 tracking-tighter">
+                                {absentCount} <span className="text-sm text-slate-400 dark:text-slate-500 font-medium">/ {lecturesPerMonth}</span>
                               </div>
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Absent</div>
+                              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Absent</div>
                             </div>
                           </>
                         );
@@ -456,7 +529,7 @@ export default function Attendance() {
 
                           return (
                             <>
-                              <div className="flex gap-2 p-4 border-b border-slate-100 overflow-x-auto">
+                              <div className="flex gap-2 p-4 border-b border-slate-100 dark:border-slate-700 overflow-x-auto">
                                 {months.map(month => (
                                   <button
                                     key={month}
@@ -465,7 +538,7 @@ export default function Attendance() {
                                       "px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all",
                                       selectedMonth === month 
                                         ? "bg-emerald-500 text-white shadow-md" 
-                                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                        : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
                                     )}
                                   >
                                     {month}
@@ -480,8 +553,8 @@ export default function Attendance() {
                                       className={cn(
                                         "flex items-center justify-between p-5 rounded-2xl border-2 transition-all hover:scale-[1.02]",
                                         record.status === 'present' 
-                                          ? "bg-emerald-50/30 border-emerald-100/50" 
-                                          : "bg-red-50/30 border-red-100/50"
+                                          ? "bg-emerald-50/30 dark:bg-emerald-500/5 border-emerald-100/50 dark:border-emerald-500/20" 
+                                          : "bg-red-50/30 dark:bg-red-500/5 border-red-100/50 dark:border-red-500/20"
                                       )}
                                     >
                                       <div className="flex items-center gap-4">
@@ -492,17 +565,17 @@ export default function Attendance() {
                                           {record.status === 'present' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                                         </div>
                                         <div>
-                                          <p className="text-sm font-bold text-slate-900">
+                                          <p className="text-sm font-bold text-slate-900 dark:text-slate-200">
                                             {format(parseISO(record.date), "MMMM d, yyyy")}
                                           </p>
-                                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
                                             {format(parseISO(record.date), "EEEE")}
                                           </p>
                                         </div>
                                       </div>
                                       <span className={cn(
                                         "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
-                                        record.status === 'present' ? "text-emerald-600" : "text-red-600"
+                                        record.status === 'present' ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
                                       )}>
                                         {record.status}
                                       </span>
@@ -536,7 +609,133 @@ export default function Attendance() {
               )}
             </div>
           </motion.div>
-        )}
+        ) : activeTab === 'report' ? (
+          <motion.div 
+            key="report"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-8"
+          >
+            <div className="flex items-center justify-end">
+              <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-2.5 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm">
+                <button 
+                  onClick={() => {
+                    const [year, month] = reportMonth.split('-');
+                    const d = new Date(parseInt(year), parseInt(month) - 2);
+                    setReportMonth(format(d, "yyyy-MM"));
+                  }}
+                  className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-slate-400 dark:text-slate-500 transition-colors active:scale-90"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-3 px-4 border-x border-slate-100 dark:border-slate-700">
+                  <Calendar className="w-5 h-5 text-emerald-500" />
+                  <input 
+                    type="month" 
+                    className="font-bold text-slate-700 dark:text-slate-300 focus:outline-none bg-transparent"
+                    value={reportMonth}
+                    onChange={(e) => setReportMonth(e.target.value)}
+                  />
+                </div>
+                <button 
+                  onClick={() => {
+                    const [year, month] = reportMonth.split('-');
+                    const d = new Date(parseInt(year), parseInt(month));
+                    setReportMonth(format(d, "yyyy-MM"));
+                  }}
+                  className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-slate-400 dark:text-slate-500 transition-colors active:scale-90"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Monthly Attendance Report</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Overview of attendance for {format(parseISO(`${reportMonth}-01`), "MMMM yyyy")}
+                </p>
+              </div>
+              
+              {fetchingReport ? (
+                <div className="p-12 text-center text-slate-500">Loading report...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="text-slate-400 dark:text-slate-500 text-[11px] uppercase tracking-widest font-bold border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30">
+                        <th className="px-8 py-5">Student</th>
+                        <th className="px-8 py-5 text-center">Present</th>
+                        <th className="px-8 py-5 text-center">Absent</th>
+                        <th className="px-8 py-5 text-center">Attendance %</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                      {students.map((student) => {
+                        const data = reportData[student.id] || { present: 0, absent: 0 };
+                        const total = data.present + data.absent;
+                        const percentage = total > 0 ? Math.round((data.present / total) * 100) : 0;
+                        
+                        return (
+                          <tr key={student.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-700/30 transition-colors">
+                            <td className="px-8 py-5">
+                              <div className="flex items-center gap-4">
+                                {student.photo ? (
+                                  <img src={student.photo} alt={student.name} className="w-10 h-10 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400">
+                                    {student.name.charAt(0)}
+                                  </div>
+                                )}
+                                <div>
+                                  <span className="font-bold text-slate-900 dark:text-white block">{student.name}</span>
+                                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{student.class}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5 text-center">
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
+                                {data.present}
+                              </span>
+                            </td>
+                            <td className="px-8 py-5 text-center">
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold">
+                                {data.absent}
+                              </span>
+                            </td>
+                            <td className="px-8 py-5 text-center">
+                              <div className="flex items-center justify-center gap-3">
+                                <div className="w-24 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                  <div 
+                                    className={cn(
+                                      "h-full rounded-full transition-all duration-500",
+                                      percentage >= 80 ? "bg-emerald-500" : percentage >= 50 ? "bg-orange-500" : "bg-red-500"
+                                    )}
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300 w-8">{percentage}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-8 py-12 text-center text-slate-500">
+                            No students found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
     </div>
   );

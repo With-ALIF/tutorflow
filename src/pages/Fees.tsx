@@ -148,8 +148,8 @@ export default function Fees() {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">Tuition Fees</h1>
-          <p className="text-slate-500 mt-1 font-medium text-sm md:text-base">Track payments, manage dues and generate financial reports.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">Tuition Fees</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm md:text-base">Track payments, manage dues and generate financial reports.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
@@ -162,21 +162,21 @@ export default function Fees() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-9 space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/30">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-800/30">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <input 
                   type="text" 
                   placeholder="Search payments..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white"
                 />
               </div>
               <div className="flex gap-2">
-                <button className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
+                <button className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
                   <Filter className="w-4 h-4" />
                 </button>
-                <button onClick={downloadPDF} className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
+                <button onClick={downloadPDF} className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
                   <Download className="w-4 h-4" />
                 </button>
               </div>
@@ -185,7 +185,7 @@ export default function Fees() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-slate-400 text-[11px] uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/30">
+                  <tr className="text-slate-400 dark:text-slate-500 text-[11px] uppercase tracking-widest font-bold border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30">
                     <th className="px-6 py-4">Student</th>
                     <th className="px-6 py-4">Fee Month</th>
                     <th className="px-6 py-4">Amount</th>
@@ -194,19 +194,19 @@ export default function Fees() {
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {fees.map((fee) => (
-                    <tr key={fee.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <tr key={fee.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
                       <td className="px-6 py-4">
-                        <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{fee.students.name}</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">{fee.students.name}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           {fee.fee_month ? new Date(fee.fee_month + '-01').toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-mono font-bold text-slate-700">${fee.amount}</span>
+                        <span className="text-sm font-mono font-bold text-slate-700 dark:text-slate-300">${fee.amount}</span>
                       </td>
                       <td className="px-6 py-4 text-xs font-medium text-slate-500">
                         {new Date(fee.payment_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -287,21 +287,21 @@ export default function Fees() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
-                <h2 className="text-xl font-bold text-slate-900">Record Payment</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Record Payment</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
               </div>
               <form onSubmit={handleAddPayment} className="flex flex-col overflow-hidden">
                 <div className="p-6 space-y-4 overflow-y-auto">
                   <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Select Student</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Student</label>
                   <select 
                     required
-                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none dark:text-white"
                     value={newPayment.student_id}
                     onChange={e => {
                       const student = students.find(s => s.id === e.target.value);
@@ -319,37 +319,37 @@ export default function Fees() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Amount ($)</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Amount ($)</label>
                   <input 
                     required
                     type="number" 
-                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none dark:text-white"
                     value={newPayment.amount}
                     onChange={e => setNewPayment({...newPayment, amount: Number(e.target.value)})}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Fee Month</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Fee Month</label>
                   <input 
                     required
                     type="month" 
-                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none dark:text-white"
                     value={newPayment.fee_month}
                     onChange={e => setNewPayment({...newPayment, fee_month: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Payment Date</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Payment Date</label>
                   <input 
                     required
                     type="date" 
-                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none dark:text-white"
                     value={newPayment.payment_date}
                     onChange={e => setNewPayment({...newPayment, payment_date: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Status</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Status</label>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
@@ -357,8 +357,9 @@ export default function Fees() {
                         name="status" 
                         checked={newPayment.status === 'paid'}
                         onChange={() => setNewPayment({...newPayment, status: 'paid'})}
+                        className="accent-emerald-600"
                       />
-                      <span className="text-sm font-medium">Paid</span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Paid</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
@@ -366,17 +367,18 @@ export default function Fees() {
                         name="status" 
                         checked={newPayment.status === 'due'}
                         onChange={() => setNewPayment({...newPayment, status: 'due'})}
+                        className="accent-emerald-600"
                       />
-                      <span className="text-sm font-medium">Due</span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Due</span>
                     </label>
                   </div>
                 </div>
                 </div>
-                <div className="p-6 border-t border-slate-100 flex gap-3 shrink-0">
+                <div className="p-6 border-t border-slate-100 dark:border-slate-700 flex gap-3 shrink-0">
                   <button 
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                    className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                   >
                     Cancel
                   </button>
