@@ -10,8 +10,9 @@ import StudentProfile from "./pages/StudentProfile";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Layout from "./components/Layout";
-import { auth } from "./firebase";
+import { auth, db } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, getDocFromServer } from "firebase/firestore";
 import { X, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function App() {
@@ -25,6 +26,20 @@ export default function App() {
   };
 
   useEffect(() => {
+    const testConnection = async () => {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if(error instanceof Error) {
+          if (error.message.includes('the client is offline') || error.message.includes('Failed to fetch')) {
+            console.error("Please check your Firebase configuration. It might be a remixed app with an invalid database ID.");
+          }
+          // Skip logging for other errors (like missing permissions), as this is simply a connection test.
+        }
+      }
+    };
+    testConnection();
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
