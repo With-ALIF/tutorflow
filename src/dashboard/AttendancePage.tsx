@@ -6,7 +6,7 @@ import { useAttendanceHistory } from "./hooks/useAttendanceHistory";
 import { useAttendanceReport } from "./hooks/useAttendanceReport";
 import { format } from "date-fns";
 import { StudentTable } from "./components/StudentTable";
-import { HistoryPanel } from "./components/HistoryPanel";
+import { HistoryPanel } from "./history/HistoryPanel";
 import { ReportTable } from "./components/ReportTable";
 
 export default function AttendancePage() {

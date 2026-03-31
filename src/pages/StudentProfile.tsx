@@ -1,40 +1,6 @@
 import React from "react";
-import { useParams } from "react-router-dom";
-import { useStudentProfile } from "../studentprofile/hooks/useStudentProfile";
-import { usePDF } from "../studentprofile/hooks/usePDF";
-import { calculateStats } from "../studentprofile/utils/calculateStats";
-import { ProfileHeader } from "../studentprofile/components/ProfileHeader";
-import { ProfileCard } from "../studentprofile/components/ProfileCard";
-import { AttendanceProgress } from "../studentprofile/components/AttendanceProgress";
-import { AttendanceList } from "../studentprofile/components/AttendanceList";
-import { PaymentList } from "../studentprofile/components/PaymentList";
+import StudentProfile from "../studentprofile/StudentProfile";
 
-export default function StudentProfile() {
-  const { id } = useParams();
-  const { student, attendance, fees, loading } = useStudentProfile(id);
-  const { downloadPDF } = usePDF();
-
-  if (loading) return <div className="p-8 text-center text-slate-500">Loading profile...</div>;
-  if (!student) return <div className="p-8 text-center text-red-500">Student not found.</div>;
-
-  const stats = calculateStats(attendance, student);
-
-  return (
-    <div className="space-y-10">
-      <ProfileHeader />
-      <div className="space-y-10">
-        <ProfileCard student={student} />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          <div className="space-y-8">
-            <AttendanceProgress 
-              {...stats} 
-              onDownload={() => downloadPDF(student, attendance)} 
-            />
-            <AttendanceList attendance={attendance} />
-          </div>
-          <PaymentList fees={fees} />
-        </div>
-      </div>
-    </div>
-  );
+export default function StudentProfilePage() {
+  return <StudentProfile />;
 }
