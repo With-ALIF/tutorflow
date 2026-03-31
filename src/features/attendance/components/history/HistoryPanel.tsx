@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Student, AttendanceRecord } from "../types/attendance.types";
-import { StudentList } from "./components/StudentList";
-import { StudentHeader } from "./components/StudentHeader";
-import { MonthTabs } from "./components/MonthTabs";
-import { RecordCard } from "./components/RecordCard";
-import { EmptyState } from "./components/EmptyState";
-import { groupByMonth } from "./utils/groupByMonth";
+import { Student, AttendanceRecord } from "../../types/attendance.types";
+import { StudentList } from "./StudentList";
+import { StudentHeader } from "./StudentHeader";
+import { MonthTabs } from "./MonthTabs";
+import { RecordCard } from "./RecordCard";
+import { EmptyState } from "./EmptyState";
+import { groupByMonth } from "../../utils/groupByMonth";
 
 interface HistoryPanelProps {
   students: Student[];
@@ -18,7 +18,7 @@ interface HistoryPanelProps {
   setSelectedMonth: (month: string) => void;
 }
 
-export function HistoryPanel({
+export const HistoryPanel: React.FC<HistoryPanelProps> = ({
   students,
   studentHistory,
   selectedStudentId,
@@ -26,7 +26,7 @@ export function HistoryPanel({
   fetchingHistory,
   selectedMonth,
   setSelectedMonth,
-}: HistoryPanelProps) {
+}) => {
   const grouped = groupByMonth(studentHistory);
   const months = Object.keys(grouped);
   const selectedStudent = students.find(s => s.id === selectedStudentId);
@@ -51,7 +51,6 @@ export function HistoryPanel({
         {selectedStudentId && selectedStudent ? (
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
             <StudentHeader student={selectedStudent} />
-
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               {fetchingHistory ? (
                 <div className="flex items-center justify-center h-60">
@@ -83,4 +82,4 @@ export function HistoryPanel({
       </div>
     </motion.div>
   );
-}
+};

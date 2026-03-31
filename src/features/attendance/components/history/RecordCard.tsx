@@ -1,7 +1,7 @@
 import React from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { cn } from "../../../lib/utils";
+import { cn } from "../../../../lib/utils";
 import { AttendanceRecord } from "../../types/attendance.types";
 
 interface RecordCardProps {
@@ -42,4 +42,4 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record }) => {
       </span>
     </div>
   );
-}
+};

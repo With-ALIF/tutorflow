@@ -5,7 +5,7 @@ interface EmptyStateProps {
   type: "no-student" | "no-records";
 }
 
-export function EmptyState({ type }: EmptyStateProps) {
+export const EmptyState: React.FC<EmptyStateProps> = ({ type }) => {
   if (type === "no-records") {
     return (
       <div className="flex flex-col items-center justify-center h-80 text-slate-400">
@@ -28,4 +28,4 @@ export function EmptyState({ type }: EmptyStateProps) {
       </p>
     </div>
   );
-}
+};
