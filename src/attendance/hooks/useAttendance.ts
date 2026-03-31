@@ -1,33 +1,26 @@
 import { useState, useEffect, useContext } from "react";
+import { auth } from "../../firebase";
 import { ToastContext } from "../../context/ToastContext";
-import { fetchStudents } from "../services/studentService";
-import { fetchDailyAttendance, saveAttendance, addFee } from "../services/attendanceService";
-import { Student } from "../types/attendance.types";
-import { auth, db } from "../../firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { fetchAttendanceByDate, saveAttendance } from "../services/attendanceService";
+import { Student } from "../types";
 
-export const useAttendance = (date: string) => {
+export const useAttendance = (date: string, students: Student[]) => {
   const { showToast } = useContext(ToastContext);
-  const [students, setStudents] = useState<Student[]>([]);
   const [records, setRecords] = useState<Record<string, 'present' | 'absent'>>({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
+    const loadAttendance = async () => {
+      if (!auth.currentUser) return;
       try {
-        const studentsData = await fetchStudents();
-        setStudents(studentsData);
-        const attendanceData = await fetchDailyAttendance(date);
-        setRecords(attendanceData);
+        const data = await fetchAttendanceByDate(auth.currentUser.uid, date);
+        setRecords(data);
       } catch (err) {
-        showToast("Failed to load attendance data", "error");
-      } finally {
-        setLoading(false);
+        console.error("Error fetching daily attendance:", err);
+        showToast("Failed to fetch attendance", "error");
       }
     };
-    loadData();
+    loadAttendance();
   }, [date]);
 
   const handleStatusChange = (studentId: string, status: 'present' | 'absent') => {
@@ -38,50 +31,15 @@ export const useAttendance = (date: string) => {
     setSaving(true);
     try {
       if (!auth.currentUser) return;
-      
-      // Fetch all attendance and fees for the user
-      const allAttendanceQ = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid));
-      const allAttendanceSnapshot = await getDocs(allAttendanceQ);
-      const allAttendance = allAttendanceSnapshot.docs.map(doc => doc.data());
-      
-      const allFeesQ = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
-      const allFeesSnapshot = await getDocs(allFeesQ);
-      const allFees = allFeesSnapshot.docs.map(doc => doc.data());
-
-      for (const [studentId, status] of Object.entries(records)) {
-        await saveAttendance(studentId, date, status);
-
-        if (status === 'present') {
-          const student = students.find(s => s.id === studentId);
-          if (student) {
-            const lecturesPerMonth = student.lectures_per_month || 12;
-            
-            let count = allAttendance.filter((a: any) => a.student_id === studentId && a.status === 'present').length;
-            const existingRecord = allAttendance.find((a: any) => a.student_id === studentId && a.date === date);
-            if (!existingRecord || (existingRecord as any).status !== 'present') {
-              count++;
-            }
-
-            if (count > 0 && count % lecturesPerMonth === 0) {
-              const recordMonth = date.slice(0, 7);
-              const feeExists = allFees.some((f: any) => f.student_id === studentId && f.fee_month === recordMonth);
-              
-              if (!feeExists) {
-                await addFee(studentId, student.monthly_fee || 0, date, recordMonth);
-                allFees.push({ student_id: studentId, fee_month: recordMonth } as any);
-              }
-            }
-          }
-        }
-      }
-      
+      await saveAttendance(auth.currentUser.uid, date, records, students);
       showToast("Attendance saved successfully!");
     } catch (err: any) {
+      console.error("Error saving attendance:", err);
       showToast(err.message || "Failed to save attendance", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  return { students, records, loading, saving, handleStatusChange, handleSave };
+  return { records, handleStatusChange, handleSave, saving };
 };

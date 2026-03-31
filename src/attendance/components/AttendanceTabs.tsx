@@ -1,5 +1,5 @@
 import React from "react";
-import { UserCheck, History, Calendar } from "lucide-react";
+import { Calendar, History, UserCheck } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 interface AttendanceTabsProps {

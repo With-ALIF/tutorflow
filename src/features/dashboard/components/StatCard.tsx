@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 
 interface StatCardProps {
+  key?: string | number;
   label: string;
   value: string | number;
   icon: string;

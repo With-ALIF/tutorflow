@@ -1,20 +1,64 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# TutorFlow - Tuition Hub BD
 
-# Run and deploy your AI Studio app
+TutorFlow is a comprehensive platform designed to manage tuition hubs efficiently. It streamlines the process of tracking students, attendance, fees, and overall hub management.
 
-This contains everything you need to run your app locally.
+## Why TutorFlow?
 
-View your app in AI Studio: https://ai.studio/apps/537a9318-48cf-41c2-8095-cfc9d5f9183e
+Managing a tuition hub involves keeping track of many students, their attendance records, and fee payments. Manual tracking is often prone to errors and time-consuming. TutorFlow provides a centralized, digital solution to automate these tasks, allowing tutors to focus more on teaching and less on administrative work.
 
-## Run Locally
+## Target Audience
 
-**Prerequisites:**  Node.js
+- **Tuition Center Owners:** To manage multiple batches, teachers, and students.
+- **Individual Tutors:** To keep track of their students' progress and payments.
+- **Educational Institutions:** As a lightweight management system.
 
+## Features
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- **Student Management:** Keep track of student profiles, classes, and contact information.
+- **Attendance Tracking:** Easily mark daily attendance and view historical data.
+- **Fee Management:** Monitor pending fees and payment history.
+- **Dashboard:** Get an overview of hub statistics and recent activities.
+
+## Future Roadmap
+
+- **Parent Portal:** Allow parents to view their child's attendance and fee status.
+- **Automated Notifications:** Send SMS/Email alerts for pending fees or attendance updates.
+- **Performance Reports:** Generate detailed progress reports for students.
+- **Teacher Management:** Assign teachers to specific batches and track their schedules.
+
+## Tech Stack
+
+- **Frontend:** React, TypeScript, Tailwind CSS, Vite
+- **Backend/Database:** Firebase (Firestore, Authentication)
+- **State Management:** React Hooks
+- **Animations:** Motion (framer-motion)
+- **Utilities:** date-fns, lucide-react
+
+## Getting Started
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/With-ALIF/tutorflow.git
+   cd tutorflow
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables:**
+   Create a `.env` file based on `.env.example` and add your Firebase configuration.
+
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License.

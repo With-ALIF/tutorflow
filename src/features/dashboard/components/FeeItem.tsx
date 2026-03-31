@@ -2,6 +2,7 @@ import React from "react";
 import { AlertCircle } from "lucide-react";
 
 interface FeeItemProps {
+  key?: string | number;
   fee: any;
 }
 

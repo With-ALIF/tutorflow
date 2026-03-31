@@ -1,13 +1,13 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useStudentProfile } from "../studentprofile/hooks/useStudentProfile";
-import { usePDF } from "../studentprofile/hooks/usePDF";
-import { calculateStats } from "../studentprofile/utils/calculateStats";
-import { ProfileHeader } from "../studentprofile/components/ProfileHeader";
-import { ProfileCard } from "../studentprofile/components/ProfileCard";
-import { AttendanceProgress } from "../studentprofile/components/AttendanceProgress";
-import { AttendanceList } from "../studentprofile/components/AttendanceList";
-import { PaymentList } from "../studentprofile/components/PaymentList";
+import { useStudentProfile } from "./hooks/useStudentProfile";
+import { usePDF } from "./hooks/usePDF";
+import { calculateStats } from "./utils/calculateStats";
+import { ProfileHeader } from "./components/ProfileHeader";
+import { ProfileCard } from "./components/ProfileCard";
+import { AttendanceProgress } from "./components/AttendanceProgress";
+import { AttendanceList } from "./components/AttendanceList";
+import { PaymentList } from "./components/PaymentList";
 
 export default function StudentProfile() {
   const { id } = useParams();

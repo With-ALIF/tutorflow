@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
 interface AttendanceItemProps {
+  key?: string | number;
   activity: any;
 }
 
