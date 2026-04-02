@@ -1,7 +1,7 @@
 import React from "react";
 import { Search, Filter, Download, CreditCard } from "lucide-react";
 import { cn } from "../../../lib/utils";
-import { FeeRecord } from "../services/feeService";
+import { FeeRecord } from "../types/fee.types";
 
 interface FeesTableProps {
   fees: FeeRecord[];

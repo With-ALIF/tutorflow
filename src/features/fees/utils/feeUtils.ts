@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { FeeRecord } from '../services/feeService';
+import { FeeRecord } from '../types/fee.types';
 
 export const downloadPDF = (fees: FeeRecord[]) => {
   const doc = new jsPDF();

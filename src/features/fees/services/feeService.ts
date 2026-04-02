@@ -1,25 +1,7 @@
 import { db, auth } from "../../../firebase";
 import { collection, getDocs, doc, updateDoc, addDoc, query, where } from "firebase/firestore";
-
-export interface Student {
-  id: string;
-  name: string;
-  monthly_fee: number;
-  phone: string;
-  class?: string;
-}
-
-export interface FeeRecord {
-  id: string;
-  student_id: string;
-  amount: number;
-  payment_date: string;
-  fee_month: string;
-  status: 'paid' | 'due';
-  students?: {
-    name: string;
-  };
-}
+import { Student } from "../../../types/student";
+import { FeeRecord } from "../../../types/fee";
 
 export const fetchStudents = async (): Promise<Student[]> => {
   if (!auth.currentUser) return [];
@@ -47,6 +29,7 @@ export const fetchFees = async (studentsData: Student[]): Promise<FeeRecord[]> =
 };
 
 export const markFeeAsPaid = async (id: string): Promise<void> => {
+  if (!auth.currentUser) return;
   const feeRef = doc(db, "fees", id);
   await updateDoc(feeRef, {
     status: 'paid',

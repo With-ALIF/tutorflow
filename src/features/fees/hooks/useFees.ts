@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ToastContext } from "../../../context/ToastContext";
-import { fetchStudents, fetchFees, markFeeAsPaid, addPayment, FeeRecord, Student } from "../services/feeService";
+import { fetchStudents, fetchFees, markFeeAsPaid, addPayment } from "../services/feeService";
+import { Student, FeeRecord } from "../types/fee.types";
 import { downloadPDF } from "../utils/feeUtils";
 
 export const useFees = () => {

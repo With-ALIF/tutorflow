@@ -1,5 +1,5 @@
 import React from "react";
-import { FeeRecord } from "../services/feeService";
+import { FeeRecord } from "../types/fee.types";
 
 interface SummaryCardProps {
   fees: FeeRecord[];

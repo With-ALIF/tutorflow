@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus } from "lucide-react";
-import { Student } from "../services/feeService";
+import { Student } from "../types/fee.types";
 
 interface PaymentModalProps {
   isOpen: boolean;

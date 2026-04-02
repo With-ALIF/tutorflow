@@ -1,13 +1,17 @@
 import { db, auth } from "../../../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { Student } from "../../../types/student";
+import { FeeRecord } from "../../../types/fee";
+import { AttendanceRecord } from "../../../types/attendance";
+import { Stats } from "../types/dashboard.types";
 
-export const fetchDashboardData = async () => {
+export const fetchDashboardData = async (): Promise<Stats> => {
   if (!auth.currentUser) throw new Error("User not authenticated");
   
   const studentsQuery = query(collection(db, "students"), where("userId", "==", auth.currentUser.uid));
   const studentsSnapshot = await getDocs(studentsQuery);
   const totalStudents = studentsSnapshot.size;
-  const studentsMap = new Map();
+  const studentsMap = new Map<string, string>();
   studentsSnapshot.docs.forEach(doc => {
     studentsMap.set(doc.id, doc.data().name);
   });
@@ -22,7 +26,7 @@ export const fetchDashboardData = async () => {
   const upcomingFees: any[] = [];
 
   feesSnapshot.forEach(doc => {
-    const data = doc.data();
+    const data = doc.data() as FeeRecord;
     if (data.fee_month !== currentMonth) return;
     if (!studentIds.has(data.student_id)) return;
     if (data.status === 'paid') {
@@ -41,7 +45,7 @@ export const fetchDashboardData = async () => {
   const recentActivitySnapshot = await getDocs(recentActivityQuery);
   const recentActivity = recentActivitySnapshot.docs
     .map(doc => {
-      const data = doc.data();
+      const data = doc.data() as AttendanceRecord;
       return {
         id: doc.id,
         studentName: studentsMap.get(data.student_id) || 'Unknown Student',
