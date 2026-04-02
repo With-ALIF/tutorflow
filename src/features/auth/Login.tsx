@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "motion/react";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth } from "@/src/features/auth/hooks/useAuth";
 import { LoginHeader } from "./components/LoginHeader";
 import { LoginForm } from "./components/LoginForm";
 import { GoogleButton } from "./components/GoogleButton";
