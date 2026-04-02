@@ -16,7 +16,7 @@ export const FeeItem = ({ fee }: FeeItemProps) => (
       <p className="text-xs text-slate-500 dark:text-slate-400">Month: {fee.fee_month}</p>
     </div>
     <div className="text-right">
-      <p className="text-sm font-black text-slate-900 dark:text-white">${fee.amount}</p>
+      <p className="text-sm font-black text-slate-900 dark:text-white">৳{fee.amount}</p>
     </div>
   </div>
 );

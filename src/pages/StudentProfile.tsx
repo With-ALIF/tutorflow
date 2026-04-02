@@ -1,6 +1,8 @@
 import React from "react";
-import StudentProfile from "../studentprofile/StudentProfile";
+import StudentProfile from "../features/studentprofile/StudentProfile";
 
-export default function StudentProfilePage() {
+const StudentProfilePage: React.FC = () => {
   return <StudentProfile />;
-}
+};
+
+export default StudentProfilePage;

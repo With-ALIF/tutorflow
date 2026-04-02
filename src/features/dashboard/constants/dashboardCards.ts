@@ -9,7 +9,7 @@ export const getDashboardCards = (stats: any) => [
   },
   {
     label: "Monthly Income",
-    value: `$${(stats?.monthlyIncome || 0).toLocaleString()}`,
+    value: `৳${(stats?.monthlyIncome || 0).toLocaleString()}`,
     icon: "https://png.pngtree.com/png-vector/20231211/ourmid/pngtree-payment-icon-income-png-image_10858293.png",
     color: "bg-emerald-500",
     trend: "+8% from last month",
@@ -17,7 +17,7 @@ export const getDashboardCards = (stats: any) => [
   },
   {
     label: "Due Fees",
-    value: `$${(stats?.dueFees || 0).toLocaleString()}`,
+    value: `৳${(stats?.dueFees || 0).toLocaleString()}`,
     icon: "https://www.shutterstock.com/image-vector/education-grant-icon-on-white-260nw-2256198049.jpg",
     color: "bg-orange-500",
     trend: "Requires attention",
