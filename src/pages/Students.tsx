@@ -1,5 +1,5 @@
 import React from "react";
-import { Students as StudentsFeature } from "../features/students/Students";
+import { Students as StudentsFeature } from "@/src/features/students/Students";
 
 const Students: React.FC = () => {
   return <StudentsFeature />;

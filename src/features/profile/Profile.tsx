@@ -1,5 +1,5 @@
 import React from "react";
-import { useProfile } from "./hooks/useProfile";
+import { useProfile } from "@/src/features/profile/hooks/useProfile";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { MessageAlert } from "./components/MessageAlert";
 import { UpdateEmailForm } from "./components/UpdateEmailForm";

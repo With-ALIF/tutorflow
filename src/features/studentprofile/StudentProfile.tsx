@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useStudentProfile } from "./hooks/useStudentProfile";
-import { usePDF } from "./hooks/usePDF";
+import { useStudentProfile } from "@/src/features/studentprofile/hooks/useStudentProfile";
+import { usePDF } from "@/src/features/studentprofile/hooks/usePDF";
 import { calculateStats } from "./utils/calculateStats";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileCard } from "./components/ProfileCard";

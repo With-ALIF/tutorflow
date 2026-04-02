@@ -1,5 +1,5 @@
 import React from "react";
-import StudentProfile from "../features/studentprofile/StudentProfile";
+import StudentProfile from "@/src/features/studentprofile/StudentProfile";
 
 const StudentProfilePage: React.FC = () => {
   return <StudentProfile />;

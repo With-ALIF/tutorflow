@@ -1,5 +1,5 @@
 import React from "react";
-import { useDashboard } from "./hooks/useDashboard";
+import { useDashboard } from "@/src/features/dashboard/hooks/useDashboard";
 import { StatsCards } from "./components/StatsCards";
 import { RecentAttendance } from "./components/RecentAttendance";
 import { DueFees } from "./components/DueFees";

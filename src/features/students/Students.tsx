@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useStudents } from "./hooks/useStudents";
+import { useStudents } from "@/src/features/students/hooks/useStudents";
 import { filterStudents } from "./utils/filterStudents";
 import { StudentsHeader } from "./components/StudentsHeader";
 import { StudentsTable } from "./components/StudentsTable";

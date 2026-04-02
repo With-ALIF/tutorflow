@@ -1,9 +1,9 @@
 import React from "react";
 import { motion } from "motion/react";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
-import { LoginHeader } from "./components/LoginHeader";
-import { LoginForm } from "./components/LoginForm";
-import { GoogleButton } from "./components/GoogleButton";
+import { LoginHeader } from "@/src/features/auth/components/LoginHeader";
+import { LoginForm } from "@/src/features/auth/components/LoginForm";
+import { GoogleButton } from "@/src/features/auth/components/GoogleButton";
 
 export const Login: React.FC = () => {
   const {

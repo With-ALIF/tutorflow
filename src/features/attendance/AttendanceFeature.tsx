@@ -1,8 +1,8 @@
 import React from "react";
-import { useAttendancePage } from "./hooks/useAttendancePage";
-import { useStudents } from "./hooks/useStudents";
-import { useAttendanceHistory } from "./hooks/useAttendanceHistory";
-import { useAttendanceReport } from "./hooks/useAttendanceReport";
+import { useAttendancePage } from "@/src/features/attendance/hooks/useAttendancePage";
+import { useStudents } from "@/src/features/attendance/hooks/useStudents";
+import { useAttendanceHistory } from "@/src/features/attendance/hooks/useAttendanceHistory";
+import { useAttendanceReport } from "@/src/features/attendance/hooks/useAttendanceReport";
 import { AttendanceLayout } from "./components/layout/AttendanceLayout";
 import { AttendancePanel } from "./components/marking/AttendancePanel";
 import { HistoryPanel } from "./components/history/HistoryPanel";

@@ -1,5 +1,5 @@
 import React from "react";
-import { useFees } from "./hooks/useFees";
+import { useFees } from "@/src/features/fees/hooks/useFees";
 import { FeesHeader } from "./components/FeesHeader";
 import { FeesTable } from "./components/FeesTable";
 import { SummaryCard } from "./components/SummaryCard";
