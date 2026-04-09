@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Phone, BookOpen, Edit2, Trash2 } from "lucide-react";
 import { Student } from "../types/student.types";
+import { cn } from "../../../lib/utils";
 
 interface StudentRowProps {
   student: Student;
@@ -61,6 +62,11 @@ export const StudentRow: React.FC<StudentRowProps> = ({ student, onEdit, onDelet
       </td>
       <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-medium">
         {new Date(student.join_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+      </td>
+      <td className="px-6 py-4">
+        <span className={cn("px-2 py-1 rounded-lg text-[10px] font-bold uppercase", student.status === 'finished' ? "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400")}>
+          {student.status || 'Active'}
+        </span>
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-2">

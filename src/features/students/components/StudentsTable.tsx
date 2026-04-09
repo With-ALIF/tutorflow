@@ -48,6 +48,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
               <th className="px-6 py-4">Lectures/Month</th>
               <th className="px-6 py-4">Per Lecture</th>
               <th className="px-6 py-4">Join Date</th>
+              <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>

@@ -17,7 +17,8 @@ export const AttendancePanel: React.FC<AttendancePanelProps> = ({ date, setDate 
     loading, 
     saving, 
     handleStatusChange, 
-    handleSave 
+    handleSave,
+    handleUndo
   } = useAttendanceMarking(date);
 
   if (loading) {
@@ -36,8 +37,16 @@ export const AttendancePanel: React.FC<AttendancePanelProps> = ({ date, setDate 
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6"
     >
-      <div className="max-w-xs">
-        <DatePicker date={date} setDate={setDate} />
+      <div className="flex items-center justify-between">
+        <div className="max-w-xs">
+          <DatePicker date={date} setDate={setDate} />
+        </div>
+        <button 
+          onClick={handleUndo}
+          className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+        >
+          Undo Changes
+        </button>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden">

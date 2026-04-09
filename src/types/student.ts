@@ -11,6 +11,8 @@ export interface Student {
   class_days: string[];
   join_date: string;
   photo?: string;
+  status?: 'active' | 'finished';
+  end_date?: string;
 }
 
 export interface NewStudent extends Omit<Student, 'id'> {

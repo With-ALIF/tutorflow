@@ -32,7 +32,16 @@ export const studentService = {
   async updateStudent(student: Student): Promise<void> {
     if (!auth.currentUser) throw new Error("User not authenticated");
     const studentRef = doc(db, "students", student.id);
-    await updateDoc(studentRef, { ...student });
+    
+    // Remove undefined fields to prevent Firestore updateDoc error
+    const dataToUpdate = { ...student };
+    Object.keys(dataToUpdate).forEach(key => {
+      if (dataToUpdate[key as keyof Student] === undefined) {
+        delete dataToUpdate[key as keyof Student];
+      }
+    });
+    
+    await updateDoc(studentRef, dataToUpdate);
   },
 
   async deleteStudent(id: string): Promise<void> {

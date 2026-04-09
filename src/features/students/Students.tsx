@@ -11,6 +11,7 @@ import { Student } from "./types/student.types";
 export const Students: React.FC = () => {
   const { students, loading, addStudent, updateStudent, deleteStudent } = useStudents();
   const [search, setSearch] = useState("");
+  const [showFinished, setShowFinished] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -18,8 +19,8 @@ export const Students: React.FC = () => {
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
 
   const filteredStudents = useMemo(() => 
-    filterStudents(students, search), 
-    [students, search]
+    filterStudents(students.filter(s => showFinished ? true : s.status !== 'finished'), search), 
+    [students, search, showFinished]
   );
 
   const handleEditClick = (student: Student) => {
@@ -52,6 +53,18 @@ export const Students: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <StudentsHeader onAddClick={() => setIsAddModalOpen(true)} />
       
+      <div className="flex items-center justify-end gap-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+          <input 
+            type="checkbox" 
+            checked={showFinished} 
+            onChange={e => setShowFinished(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+          />
+          Show Finished Students
+        </label>
+      </div>
+
       <StudentsTable 
         students={filteredStudents}
         search={search}

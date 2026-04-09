@@ -117,6 +117,27 @@ export const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onCl
                   <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Joining Date</label>
                   <input required type="date" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={editingStudent.join_date} onChange={e => setEditingStudent({...editingStudent, join_date: e.target.value})} />
                 </div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Session Status</label>
+                    <button type="button" onClick={() => {
+                      const isFinished = editingStudent.status === 'finished';
+                      setEditingStudent({
+                        ...editingStudent,
+                        status: isFinished ? 'active' : 'finished',
+                        end_date: isFinished ? undefined : new Date().toISOString().split('T')[0]
+                      });
+                    }} className={cn("px-3 py-1 rounded-lg text-xs font-bold uppercase transition-colors", editingStudent.status === 'finished' ? "bg-red-500 text-white" : "bg-emerald-500 text-white")}>
+                      {editingStudent.status === 'finished' ? 'Finished' : 'Active'}
+                    </button>
+                  </div>
+                  {editingStudent.status === 'finished' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">End Date</label>
+                      <input type="date" className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={editingStudent.end_date || ''} onChange={e => setEditingStudent({...editingStudent, end_date: e.target.value})} />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="p-6 border-t border-slate-100 dark:border-slate-700 flex gap-3 shrink-0">
                 <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancel</button>

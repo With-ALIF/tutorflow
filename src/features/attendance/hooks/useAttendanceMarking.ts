@@ -11,6 +11,7 @@ export const useAttendanceMarking = (date: string) => {
   const { showToast } = useContext(ToastContext);
   const [students, setStudents] = useState<Student[]>([]);
   const [records, setRecords] = useState<Record<string, AttendanceStatus>>({});
+  const [initialRecords, setInitialRecords] = useState<Record<string, AttendanceStatus>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -22,8 +23,9 @@ export const useAttendanceMarking = (date: string) => {
           fetchStudents(),
           fetchDailyAttendance(date)
         ]);
-        setStudents(studentsData);
+        setStudents(studentsData.filter(s => s.status !== 'finished'));
         setRecords(attendanceData);
+        setInitialRecords(attendanceData);
       } catch (err) {
         showToast("Failed to load attendance data", "error");
       } finally {
@@ -36,6 +38,10 @@ export const useAttendanceMarking = (date: string) => {
   const handleStatusChange = useCallback((studentId: string, status: AttendanceStatus) => {
     setRecords(prev => ({ ...prev, [studentId]: status }));
   }, []);
+
+  const handleUndo = useCallback(() => {
+    setRecords(initialRecords);
+  }, [initialRecords]);
 
   const handleSave = async () => {
     if (!auth.currentUser) return;
@@ -73,6 +79,7 @@ export const useAttendanceMarking = (date: string) => {
           }
         }
       }
+      setInitialRecords(records);
       showToast("Attendance saved successfully!");
     } catch (err: any) {
       showToast(err.message || "Failed to save attendance", "error");
@@ -81,5 +88,5 @@ export const useAttendanceMarking = (date: string) => {
     }
   };
 
-  return { students, records, loading, saving, handleStatusChange, handleSave };
+  return { students, records, loading, saving, handleStatusChange, handleSave, handleUndo };
 };
