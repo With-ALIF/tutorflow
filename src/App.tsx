@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastContext } from "./context/ToastContext";
-import Dashboard from "./pages/Dashboard";
-import Students from "./pages/Students";
-import Attendance from "./pages/Attendance";
-import Fees from "./pages/Fees";
-import StudentProfile from "./pages/StudentProfile";
-import Login from "./pages/Login";
-import Profile from "./pages/Profile";
+import DashboardPage from "./features/dashboard/DashboardPage";
+import { Students as StudentsFeature } from "./features/students/Students";
+import { AttendanceFeature } from "./features/attendance/AttendanceFeature";
+import { Fees as FeesFeature } from "./features/fees/Fees";
+import StudentProfilePage from "./features/studentprofile/StudentProfile";
+import { Login as LoginFeature } from "./features/auth/Login";
+import { Profile as ProfileFeature } from "./features/profile/Profile";
 import Layout from "./components/Layout";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -61,15 +61,15 @@ export default function App() {
       <ToastContext.Provider value={{ showToast }}>
         <Router>
           <Routes>
-            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+            <Route path="/login" element={!user ? <LoginFeature /> : <Navigate to="/" />} />
             
             <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
-              <Route index element={<Dashboard />} />
-              <Route path="students" element={<Students />} />
-              <Route path="students/:id" element={<StudentProfile />} />
-              <Route path="attendance" element={<Attendance />} />
-              <Route path="fees" element={<Fees />} />
-              <Route path="profile" element={<Profile />} />
+              <Route index element={<DashboardPage />} />
+              <Route path="students" element={<StudentsFeature />} />
+              <Route path="students/:id" element={<StudentProfilePage />} />
+              <Route path="attendance" element={<AttendanceFeature />} />
+              <Route path="fees" element={<FeesFeature />} />
+              <Route path="profile" element={<ProfileFeature />} />
             </Route>
           </Routes>
         </Router>
