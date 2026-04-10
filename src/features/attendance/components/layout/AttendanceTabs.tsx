@@ -25,14 +25,14 @@ export const AttendanceTabs: React.FC<AttendanceTabsProps> = ({ activeTab, setAc
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-3 px-6 py-3 rounded-2xl text-xs font-bold transition-all",
+              "flex items-center gap-3 px-4 py-3 sm:px-6 rounded-2xl text-xs font-bold transition-all",
               isActive
                 ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-slate-700"
                 : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             )}
           >
             <Icon className={cn("w-4 h-4", isActive ? "text-emerald-500" : "text-slate-400")} />
-            {tab.label}
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         );
       })}
