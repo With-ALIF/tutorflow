@@ -37,13 +37,13 @@ export const AttendancePanel: React.FC<AttendancePanelProps> = ({ date, setDate 
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6"
     >
-      <div className="flex items-center justify-between">
-        <div className="max-w-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="w-full sm:max-w-xs">
           <DatePicker date={date} setDate={setDate} />
         </div>
         <button 
           onClick={handleUndo}
-          className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+          className="px-4 py-3 sm:py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors w-full sm:w-auto text-sm"
         >
           Undo Changes
         </button>
