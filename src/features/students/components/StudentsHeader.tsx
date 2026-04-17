@@ -10,7 +10,6 @@ export const StudentsHeader: React.FC<StudentsHeaderProps> = ({ onAddClick }) =>
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">Student Management</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm md:text-base">Manage your students, their details and academic records.</p>
       </div>
       <button 
         onClick={onAddClick}

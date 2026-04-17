@@ -61,7 +61,7 @@ export const Students: React.FC = () => {
             onChange={e => setShowFinished(e.target.checked)}
             className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
           />
-          Show Finished Students
+         Course completed student list
         </label>
       </div>
 
