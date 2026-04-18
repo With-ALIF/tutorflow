@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { reauthenticate, updateUserEmail, updateUserPassword } from "../services/profileService";
+import { auth } from "../../../firebase";
 
 export const useProfile = () => {
   const [email, setEmail] = useState("");
@@ -8,9 +9,18 @@ export const useProfile = () => {
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const providerInfo = useMemo(() => {
+    const user = auth.currentUser;
+    if (!user) return { isGoogle: false, isEmail: false };
+    return {
+      isGoogle: user.providerData.some(p => p.providerId === 'google.com'),
+      isEmail: user.providerData.some(p => p.providerId === 'password')
+    };
+  }, []);
+
   const showMessage = (text: string, type: 'success' | 'error') => {
     setMessage({ text, type });
-    setTimeout(() => setMessage(null), 5000);
+    setTimeout(() => setMessage(null), 7000);
   };
 
   const handleUpdateEmail = async (e: React.FormEvent) => {
@@ -54,6 +64,7 @@ export const useProfile = () => {
     setCurrentPassword,
     message,
     loading,
+    providerInfo,
     handleUpdateEmail,
     handleUpdatePassword
   };

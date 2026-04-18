@@ -6,7 +6,7 @@ import { UpdateEmailForm } from "./components/UpdateEmailForm";
 import { UpdatePasswordForm } from "./components/UpdatePasswordForm";
 
 export const Profile: React.FC = () => {
-  const {
+    const {
     email,
     setEmail,
     newPassword,
@@ -15,6 +15,7 @@ export const Profile: React.FC = () => {
     setCurrentPassword,
     message,
     loading,
+    providerInfo,
     handleUpdateEmail,
     handleUpdatePassword
   } = useProfile();
@@ -26,25 +27,36 @@ export const Profile: React.FC = () => {
       <MessageAlert message={message} />
 
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm p-8 space-y-8">
-        <UpdateEmailForm 
-          email={email}
-          setEmail={setEmail}
-          currentPassword={currentPassword}
-          setCurrentPassword={setCurrentPassword}
-          onSubmit={handleUpdateEmail}
-          loading={loading}
-        />
+        {!providerInfo.isEmail && providerInfo.isGoogle && (
+          <div className="p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl text-sm text-blue-700 dark:text-blue-300">
+            <p className="font-semibold">Logged in with Google</p>
+            <p className="mt-1 opacity-80">You manage your account settings (email and password) through Google.</p>
+          </div>
+        )}
 
-        <div className="h-px bg-slate-100 dark:bg-slate-700" />
+        {providerInfo.isEmail && (
+          <>
+            <UpdateEmailForm 
+              email={email}
+              setEmail={setEmail}
+              currentPassword={currentPassword}
+              setCurrentPassword={setCurrentPassword}
+              onSubmit={handleUpdateEmail}
+              loading={loading}
+            />
 
-        <UpdatePasswordForm 
-          newPassword={newPassword}
-          setNewPassword={setNewPassword}
-          currentPassword={currentPassword}
-          setCurrentPassword={setCurrentPassword}
-          onSubmit={handleUpdatePassword}
-          loading={loading}
-        />
+            <div className="h-px bg-slate-100 dark:bg-slate-700" />
+
+            <UpdatePasswordForm 
+              newPassword={newPassword}
+              setNewPassword={setNewPassword}
+              currentPassword={currentPassword}
+              setCurrentPassword={setCurrentPassword}
+              onSubmit={handleUpdatePassword}
+              loading={loading}
+            />
+          </>
+        )}
       </div>
     </div>
   );
