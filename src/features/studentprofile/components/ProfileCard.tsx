@@ -1,34 +1,53 @@
 import React from "react";
 import { Student } from "../../../types/student";
 import { Phone, MapPin, Calendar, CreditCard, CheckCircle2 } from "lucide-react";
+import { cn } from "../../../lib/utils";
 
-export const ProfileCard = ({ student }: { student: Student }) => (
-  <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden">
-    <div className="h-32 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full -ml-12 -mb-12 blur-xl" />
-    </div>
-    <div className="px-8 pb-8">
-      <div className="-mt-16 mb-6 relative">
-        <div className="w-32 h-32 rounded-3xl bg-white dark:bg-slate-800 p-1.5 shadow-2xl">
-          {student.photo ? (
-            <img src={student.photo} alt={student.name} className="w-full h-full rounded-2xl object-cover" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-full h-full rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-4xl font-bold text-slate-400 dark:text-slate-500">
-              {student.name.charAt(0)}
-            </div>
-          )}
-        </div>
-        <div className="absolute bottom-2 right-2 w-8 h-8 bg-emerald-500 border-4 border-white dark:border-slate-800 rounded-full flex items-center justify-center text-white">
-          <CheckCircle2 className="w-4 h-4" />
-        </div>
+export const ProfileCard = ({ student }: { student: Student }) => {
+  const isFinished = student.status === 'finished';
+
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div className={cn(
+        "h-32 relative overflow-hidden transition-colors duration-500",
+        isFinished 
+          ? "bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600" 
+          : "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600"
+      )}>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full -ml-12 -mb-12 blur-xl" />
       </div>
-      <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{student.name}</h2>
-      <div className="flex items-center gap-2 mt-1">
-        <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-[10px] font-bold uppercase tracking-widest">Class {student.class}</span>
-        <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-widest">{student.subject || 'No Subject'}</span>
-        <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-bold uppercase tracking-widest">Active</span>
-      </div>
+      <div className="px-8 pb-8">
+        <div className="-mt-16 mb-6 relative">
+          <div className="w-32 h-32 rounded-3xl bg-white dark:bg-slate-800 p-1.5 shadow-2xl">
+            {student.photo ? (
+              <img src={student.photo} alt={student.name} className="w-full h-full rounded-2xl object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-full h-full rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-4xl font-bold text-slate-400 dark:text-slate-500">
+                {student.name.charAt(0)}
+              </div>
+            )}
+          </div>
+          <div className={cn(
+            "absolute bottom-2 right-2 w-8 h-8 border-4 border-white dark:border-slate-800 rounded-full flex items-center justify-center text-white shadow-lg transition-colors",
+            isFinished ? "bg-amber-500" : "bg-emerald-500"
+          )}>
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+        </div>
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{student.name}</h2>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-[10px] font-bold uppercase tracking-widest">Class {student.class}</span>
+          <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-widest">{student.subject || 'No Subject'}</span>
+          <span className={cn(
+            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors",
+            isFinished 
+              ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400" 
+              : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          )}>
+            {isFinished ? 'Finished' : 'Active'}
+          </span>
+        </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pt-8 border-t border-slate-100 dark:border-slate-700 mt-8">
         <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400 group">
@@ -77,4 +96,5 @@ export const ProfileCard = ({ student }: { student: Student }) => (
       </div>
     </div>
   </div>
-);
+  );
+};

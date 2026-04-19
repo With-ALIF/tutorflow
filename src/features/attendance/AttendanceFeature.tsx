@@ -12,6 +12,8 @@ export const AttendanceFeature: React.FC = () => {
   const page = useAttendancePage();
   const { students } = useStudents();
   
+  const activeStudents = students.filter(s => s.status !== 'finished');
+  
   const { history: studentHistory, loading: fetchingHistory } = useAttendanceHistory(page.selectedStudentId);
   const { data: reportData } = useAttendanceReport(page.reportMonth);
 
@@ -33,7 +35,7 @@ export const AttendanceFeature: React.FC = () => {
       )}
       {page.activeTab === 'report' && (
         <ReportPanel 
-          students={students} 
+          students={activeStudents} 
           reportMonth={page.reportMonth} 
           setReportMonth={page.setReportMonth} 
           reportData={reportData}

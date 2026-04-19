@@ -64,8 +64,13 @@ export const StudentRow: React.FC<StudentRowProps> = ({ student, onEdit, onDelet
         {new Date(student.join_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
       </td>
       <td className="px-6 py-4">
-        <span className={cn("px-2 py-1 rounded-lg text-[10px] font-bold uppercase", student.status === 'finished' ? "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400")}>
-          {student.status || 'Active'}
+        <span className={cn(
+          "px-2 py-1 rounded-lg text-[10px] font-bold uppercase", 
+          student.status === 'finished' 
+            ? "bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400" 
+            : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"
+        )}>
+          {student.status === 'finished' ? 'Finished' : (student.status || 'Active')}
         </span>
       </td>
       <td className="px-6 py-4 text-right">
