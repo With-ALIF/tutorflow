@@ -9,9 +9,18 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ student }) => {
   return (
     <div className="p-8 border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30">
       <div className="flex items-center gap-6">
-        <div className="w-20 h-20 rounded-3xl bg-emerald-500 flex items-center justify-center text-2xl font-black text-white shadow-xl shadow-emerald-500/20">
-          {student.name.charAt(0)}
-        </div>
+        {student.photo ? (
+          <img 
+            src={student.photo} 
+            alt={student.name} 
+            className="w-20 h-20 rounded-3xl object-cover shadow-xl" 
+            referrerPolicy="no-referrer" 
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-3xl bg-emerald-500 flex items-center justify-center text-2xl font-black text-white shadow-xl shadow-emerald-500/20">
+            {student.name.charAt(0)}
+          </div>
+        )}
         <div>
           <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{student.name}</h2>
           <div className="flex items-center gap-3 mt-2">
