@@ -34,5 +34,12 @@ service cloud.firestore {
       allow update: if isDocOwner() && isOwner();
       allow delete: if isDocOwner();
     }
+
+    match /expenses/{expenseId} {
+      allow read: if isDocOwner();
+      allow create: if isOwner();
+      allow update: if isDocOwner() && isOwner();
+      allow delete: if isDocOwner();
+    }
   }
 }

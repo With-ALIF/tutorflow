@@ -11,6 +11,7 @@ export interface Student {
   class_days: string[];
   join_date: string;
   photo?: string;
+  batch?: string;
   status?: 'active' | 'finished';
   end_date?: string;
 }

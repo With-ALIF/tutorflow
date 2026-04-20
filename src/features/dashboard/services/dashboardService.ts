@@ -1,5 +1,5 @@
 import { db, auth } from "../../../firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { Student } from "../../../types/student";
 import { FeeRecord } from "../../../types/fee";
 import { AttendanceRecord } from "../../../types/attendance";
@@ -19,10 +19,16 @@ export const fetchDashboardData = async (): Promise<Stats> => {
 
   const currentMonth = new Date().toISOString().slice(0, 7);
   const feesQuery = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
-  const feesSnapshot = await getDocs(feesQuery);
+  const expensesQuery = query(collection(db, "expenses"), where("userId", "==", auth.currentUser.uid));
+  
+  const [feesSnapshot, expensesSnapshot] = await Promise.all([
+    getDocs(feesQuery),
+    getDocs(expensesQuery)
+  ]);
   
   let monthlyIncome = 0;
   let totalDueBalance = 0;
+  let monthlyExpenses = 0;
   const upcomingFees: any[] = [];
 
   feesSnapshot.forEach(doc => {
@@ -41,7 +47,18 @@ export const fetchDashboardData = async (): Promise<Stats> => {
     }
   });
 
-  const recentActivityQuery = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid));
+  expensesSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.date && data.date.startsWith(currentMonth)) {
+      monthlyExpenses += data.amount || 0;
+    }
+  });
+
+  const recentActivityQuery = query(
+    collection(db, "attendance"), 
+    where("userId", "==", auth.currentUser.uid),
+    limit(20)
+  );
   const recentActivitySnapshot = await getDocs(recentActivityQuery);
   const recentActivity = recentActivitySnapshot.docs
     .map(doc => {
@@ -58,6 +75,7 @@ export const fetchDashboardData = async (): Promise<Stats> => {
   return {
     totalStudents,
     monthlyIncome,
+    monthlyExpenses,
     dueFees: totalDueBalance,
     recentActivity,
     upcomingFees: upcomingFees.slice(0, 5)

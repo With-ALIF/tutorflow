@@ -22,7 +22,8 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
     lectures_per_week: 3,
     class_days: [],
     join_date: new Date().toISOString().split('T')[0],
-    photo: ""
+    photo: "",
+    batch: ""
   });
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +42,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
       setNewStudent({
         name: "", class: "", phone: "", subject: "", address: "",
         monthly_fee: 0, lectures_per_month: 12, lectures_per_week: 3,
-        class_days: [], join_date: new Date().toISOString().split('T')[0], photo: ""
+        class_days: [], join_date: new Date().toISOString().split('T')[0], photo: "", batch: ""
       });
     }
   };
@@ -98,7 +99,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                   <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
                   <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" placeholder="Enter student name" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Class</label>
                     <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" placeholder="e.g. 10th" value={newStudent.class} onChange={e => setNewStudent({...newStudent, class: e.target.value})} />
@@ -106,6 +107,10 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Subject</label>
                     <input required type="text" placeholder="e.g. Mathematics" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={newStudent.subject} onChange={e => setNewStudent({...newStudent, subject: e.target.value})} />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Batch / Section</label>
+                    <input required type="text" placeholder="e.g. Morning A" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={newStudent.batch} onChange={e => setNewStudent({...newStudent, batch: e.target.value})} />
                   </div>
                 </div>
                 <div>

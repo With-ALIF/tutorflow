@@ -9,7 +9,8 @@ import {
   X,
   LogOut,
   Sun,
-  Moon
+  Moon,
+  Receipt
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { auth, signOut } from "../firebase";
@@ -22,6 +23,7 @@ const navItems = [
   { icon: Users, label: "Students", path: "/students" },
   { icon: CalendarCheck, label: "Attendance", path: "/attendance" },
   { icon: CreditCard, label: "Tuition Fees", path: "/fees" },
+  { icon: Receipt, label: "Expenses", path: "/expenses" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 

@@ -33,7 +33,10 @@ export const StudentRow: React.FC<StudentRowProps> = ({ student, onEdit, onDelet
           <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
             <BookOpen className="w-4 h-4" />
           </div>
-          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{student.class}</span>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{student.class}</span>
+            {student.batch && <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-tight">{student.batch}</span>}
+          </div>
         </div>
       </td>
       <td className="px-6 py-4">

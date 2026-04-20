@@ -92,7 +92,7 @@ export const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onCl
                   <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
                   <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={editingStudent.name} onChange={e => setEditingStudent({...editingStudent, name: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Class</label>
                     <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={editingStudent.class} onChange={e => setEditingStudent({...editingStudent, class: e.target.value})} />
@@ -100,6 +100,10 @@ export const EditStudentModal: React.FC<EditStudentModalProps> = ({ isOpen, onCl
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Subject</label>
                     <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={editingStudent.subject} onChange={e => setEditingStudent({...editingStudent, subject: e.target.value})} />
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Batch / Section</label>
+                    <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white" value={editingStudent.batch || ""} onChange={e => setEditingStudent({...editingStudent, batch: e.target.value})} />
                   </div>
                 </div>
                 <div>

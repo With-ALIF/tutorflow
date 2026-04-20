@@ -3,12 +3,15 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { Menu, X } from "lucide-react";
 import Logo from "./Logo";
+import SyncStatus from "./SyncStatus";
 
 export default function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col md:flex-row">
+      <SyncStatus />
+      
       {/* Mobile Header */}
       <header className="md:hidden bg-slate-900 dark:bg-slate-950 text-white p-3 flex items-center justify-between sticky top-0 z-50 shadow-md">
         <div className="flex items-center gap-2 overflow-hidden">

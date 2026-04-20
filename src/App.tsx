@@ -9,6 +9,7 @@ import { Fees as FeesFeature } from "./features/fees/Fees";
 import StudentProfilePage from "./features/studentprofile/StudentProfile";
 import { Login as LoginFeature } from "./features/auth/Login";
 import { Profile as ProfileFeature } from "./features/profile/Profile";
+import { Expenses as ExpensesFeature } from "./features/expenses/Expenses";
 import Layout from "./components/Layout";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -69,6 +70,7 @@ export default function App() {
               <Route path="students/:id" element={<StudentProfilePage />} />
               <Route path="attendance" element={<AttendanceFeature />} />
               <Route path="fees" element={<FeesFeature />} />
+              <Route path="expenses" element={<ExpensesFeature />} />
               <Route path="profile" element={<ProfileFeature />} />
             </Route>
           </Routes>

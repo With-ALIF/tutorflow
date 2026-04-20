@@ -12,6 +12,7 @@
         "phone": { "type": "string", "description": "Phone number" },
         "subject": { "type": "string", "description": "Subject" },
         "address": { "type": "string", "description": "Address" },
+        "batch": { "type": "string", "description": "Batch or Section" },
         "monthly_fee": { "type": "number", "description": "Monthly fee" },
         "lectures_per_month": { "type": "number", "description": "Lectures per month" },
         "lectures_per_week": { "type": "number", "description": "Lectures per week" },
@@ -49,6 +50,23 @@
         "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
       },
       "required": ["userId", "student_id", "amount", "fee_month", "status"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "An expense record related to tuition",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
+        "title": { "type": "string", "description": "Description of the expense" },
+        "amount": { "type": "number", "description": "Expense amount" },
+        "category": { "type": "string", "enum": ["Transport", "Books", "Supplies", "Food", "Others"], "description": "Expense category" },
+        "date": { "type": "string", "format": "date", "description": "Date of expense" },
+        "studentId": { "type": "string", "description": "ID of the associated student" },
+        "studentName": { "type": "string", "description": "Name of the associated student" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "title", "amount", "category", "date"]
     }
   },
   "firestore": {
@@ -63,6 +81,10 @@
     "/fees/{feeId}": {
       "schema": { "$ref": "Fee" },
       "description": "Collection of fee records"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "Expense" },
+      "description": "Collection of expense records"
     }
   }
 }

@@ -38,6 +38,7 @@ export const ProfileCard = ({ student }: { student: Student }) => {
         <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{student.name}</h2>
         <div className="flex items-center gap-2 mt-1">
           <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-[10px] font-bold uppercase tracking-widest">Class {student.class}</span>
+          {student.batch && <span className="px-3 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/20">{student.batch}</span>}
           <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-widest">{student.subject || 'No Subject'}</span>
           <span className={cn(
             "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors",
