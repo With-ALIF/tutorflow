@@ -10,7 +10,9 @@ import {
   LogOut,
   Sun,
   Moon,
-  Receipt
+  Receipt,
+  Info,
+  LogIn
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { auth, signOut } from "../firebase";
@@ -18,13 +20,17 @@ import Logo from "./Logo";
 import { motion } from "motion/react";
 import { useTheme } from "../context/ThemeContext";
 
-const navItems = [
+const privateNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Users, label: "Students", path: "/students" },
   { icon: CalendarCheck, label: "Attendance", path: "/attendance" },
   { icon: CreditCard, label: "Tuition Fees", path: "/fees" },
   { icon: Receipt, label: "Expenses", path: "/expenses" },
   { icon: User, label: "Profile", path: "/profile" },
+];
+
+const publicNavItems = [
+  { icon: Info, label: "About", path: "/about" },
 ];
 
 interface SidebarProps {
@@ -34,12 +40,15 @@ interface SidebarProps {
 export default function Sidebar({ onClose }: SidebarProps) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
+  const isAuthenticated = !!auth.currentUser;
 
   useEffect(() => {
     if (auth.currentUser) {
       setUserEmail(auth.currentUser.email || null);
+    } else {
+      setUserEmail(null);
     }
-  }, []);
+  }, [auth.currentUser]);
 
   const handleSignOut = async () => {
     try {
@@ -48,6 +57,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
       console.error("Error signing out:", error);
     }
   };
+
+  const navItems = isAuthenticated 
+    ? [...privateNavItems.slice(0, 5), ...publicNavItems, privateNavItems[5]] 
+    : publicNavItems;
 
   return (
     <aside className="w-64 bg-white dark:bg-[#0F172A] text-slate-900 dark:text-white h-full flex flex-col border-r border-slate-200 dark:border-white/5">
@@ -101,10 +114,14 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-200 dark:border-white/5 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Account</p>
-              <p className="text-xs text-slate-700 dark:text-slate-300 truncate font-medium">
-                {userEmail || "Loading..."}
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">
+                {isAuthenticated ? "Account" : "App Theme"}
               </p>
+              {isAuthenticated && (
+                <p className="text-xs text-slate-700 dark:text-slate-300 truncate font-medium max-w-[120px]">
+                  {userEmail || "User"}
+                </p>
+              )}
             </div>
             <button 
               onClick={toggleTheme}
@@ -113,13 +130,24 @@ export default function Sidebar({ onClose }: SidebarProps) {
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
           </div>
-          <button 
-            onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-red-500 hover:text-white text-xs font-bold rounded-xl transition-all border border-slate-200 dark:border-white/5"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
-          </button>
+          
+          {isAuthenticated ? (
+            <button 
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-red-500 hover:text-white text-xs font-bold rounded-xl transition-all border border-slate-200 dark:border-white/5"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          ) : (
+            <Link 
+              to="/login"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 hover:bg-emerald-700"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Log In</span>
+            </Link>
+          )}
         </div>
       </div>
     </aside>

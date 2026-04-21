@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { Info } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
 import { LoginHeader } from "@/src/features/auth/components/LoginHeader";
@@ -21,6 +23,15 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Public About Link */}
+      <Link 
+        to="/about" 
+        className="absolute top-8 right-8 z-50 flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-all group"
+      >
+        <Info className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+        <span className="text-xs font-bold uppercase tracking-widest">About</span>
+      </Link>
+
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
@@ -62,10 +73,7 @@ export const Login: React.FC = () => {
             {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
           </button>
         </div>
-        
-        <div className="px-10 pb-10 text-center">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Powered by Tuition Hub v1.0</p>
-        </div>
+         
       </motion.div>
     </div>
   );

@@ -13,7 +13,7 @@ export const CategoryFields: React.FC<CategoryFieldsProps> = ({ current, onChang
     <div>
       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category</label>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {(['Transport', 'Books', 'Supplies', 'Food', 'Others'] as ExpenseCategory[]).map(cat => (
+        {(['Transport', 'Books', 'Supplies', 'Food', 'Stationery', 'Rent', 'Utilities', 'Salaries', 'Marketing', 'Miscellaneous', 'Others'] as ExpenseCategory[]).map(cat => (
           <button
             key={cat} type="button" onClick={() => onChange(cat)}
             className={cn(
