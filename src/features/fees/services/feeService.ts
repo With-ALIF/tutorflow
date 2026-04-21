@@ -28,13 +28,21 @@ export const fetchFees = async (studentsData: Student[]): Promise<FeeRecord[]> =
     .sort((a: any, b: any) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()) as FeeRecord[];
 };
 
-export const markFeeAsPaid = async (id: string): Promise<void> => {
+export const updateFeeStatus = async (id: string, status: 'paid' | 'unpaid'): Promise<void> => {
   if (!auth.currentUser) return;
   const feeRef = doc(db, "fees", id);
   await updateDoc(feeRef, {
-    status: 'paid',
+    status,
     payment_date: new Date().toISOString().split('T')[0]
   });
+};
+
+export const markFeeAsPaid = async (id: string): Promise<void> => {
+  await updateFeeStatus(id, 'paid');
+};
+
+export const markFeeAsUnpaid = async (id: string): Promise<void> => {
+  await updateFeeStatus(id, 'unpaid');
 };
 
 export const addPayment = async (paymentData: any): Promise<void> => {

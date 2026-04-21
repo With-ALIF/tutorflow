@@ -5,7 +5,7 @@ export interface FeeRecord {
   amount: number;
   payment_date: string;
   fee_month: string;
-  status: 'paid' | 'due' | 'pending';
+  status: 'paid' | 'due' | 'pending' | 'unpaid';
   created_at: string;
   students?: {
     name: string;

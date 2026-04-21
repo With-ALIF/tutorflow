@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ToastContext } from "../../../context/ToastContext";
-import { fetchStudents, fetchFees, markFeeAsPaid, addPayment } from "../services/feeService";
+import { fetchStudents, fetchFees, markFeeAsPaid, markFeeAsUnpaid, addPayment } from "../services/feeService";
 import { Student, FeeRecord } from "../types/fee.types";
 import { downloadPDF } from "../utils/feeUtils";
 
@@ -51,6 +51,17 @@ export const useFees = () => {
     }
   };
 
+  const handleMarkAsUnpaid = async (id: string) => {
+    try {
+      await markFeeAsUnpaid(id);
+      fetchData();
+      showToast("Fee marked as unpaid and closed.");
+    } catch (err: any) {
+      console.error("Error updating fee status:", err);
+      showToast("Failed to update fee status", "error");
+    }
+  };
+
   const handleDownloadPDF = () => {
     downloadPDF(fees);
   };
@@ -84,6 +95,7 @@ export const useFees = () => {
     newPayment,
     setNewPayment,
     handleMarkAsPaid,
+    handleMarkAsUnpaid,
     handleDownloadPDF,
     handleAddPayment
   };

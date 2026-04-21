@@ -7,9 +7,10 @@ interface FeesTableProps {
   fees: FeeRecord[];
   onDownloadPDF: () => void;
   onMarkAsPaid: (id: string) => void;
+  onMarkAsUnpaid: (id: string) => void;
 }
 
-export const FeesTable: React.FC<FeesTableProps> = ({ fees, onDownloadPDF, onMarkAsPaid }) => {
+export const FeesTable: React.FC<FeesTableProps> = ({ fees, onDownloadPDF, onMarkAsPaid, onMarkAsUnpaid }) => {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden">
       <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-800/30">
@@ -63,19 +64,29 @@ export const FeesTable: React.FC<FeesTableProps> = ({ fees, onDownloadPDF, onMar
                 <td className="px-6 py-4">
                   <span className={cn(
                     "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                    fee.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                    fee.status === 'paid' ? "bg-emerald-100 text-emerald-700" : 
+                    fee.status === 'unpaid' ? "bg-red-100 text-red-700" :
+                    "bg-orange-100 text-orange-700"
                   )}>
                     {fee.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   {fee.status === 'due' && (
-                    <button 
-                      onClick={() => onMarkAsPaid(fee.id)}
-                      className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-bold transition-colors"
-                    >
-                      Mark Paid
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button 
+                        onClick={() => onMarkAsPaid(fee.id)}
+                        className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-bold transition-colors"
+                      >
+                        Mark Paid
+                      </button>
+                      <button 
+                        onClick={() => onMarkAsUnpaid(fee.id)}
+                        className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-colors"
+                      >
+                        Unpaid
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>

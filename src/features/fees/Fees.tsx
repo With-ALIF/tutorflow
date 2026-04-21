@@ -15,6 +15,7 @@ export const Fees: React.FC = () => {
     newPayment,
     setNewPayment,
     handleMarkAsPaid,
+    handleMarkAsUnpaid,
     handleDownloadPDF,
     handleAddPayment
   } = useFees();
@@ -31,6 +32,7 @@ export const Fees: React.FC = () => {
             fees={fees} 
             onDownloadPDF={handleDownloadPDF} 
             onMarkAsPaid={handleMarkAsPaid} 
+            onMarkAsUnpaid={handleMarkAsUnpaid}
           />
         </div>
 

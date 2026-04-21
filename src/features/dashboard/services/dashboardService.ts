@@ -1,5 +1,5 @@
 import { db, auth } from "../../../firebase";
-import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { collection, getDocs, query, where, limit, orderBy } from "firebase/firestore";
 import { Student } from "../../../types/student";
 import { FeeRecord } from "../../../types/fee";
 import { AttendanceRecord } from "../../../types/attendance";
@@ -37,7 +37,7 @@ export const fetchDashboardData = async (): Promise<Stats> => {
     if (!studentIds.has(data.student_id)) return;
     if (data.status === 'paid') {
       monthlyIncome += data.amount;
-    } else {
+    } else if (data.status === 'due' || data.status === 'pending') {
       totalDueBalance += data.amount;
       upcomingFees.push({ 
         id: doc.id, 
@@ -57,7 +57,8 @@ export const fetchDashboardData = async (): Promise<Stats> => {
   const recentActivityQuery = query(
     collection(db, "attendance"), 
     where("userId", "==", auth.currentUser.uid),
-    limit(20)
+    orderBy("created_at", "desc"),
+    limit(5)
   );
   const recentActivitySnapshot = await getDocs(recentActivityQuery);
   const recentActivity = recentActivitySnapshot.docs
@@ -68,9 +69,7 @@ export const fetchDashboardData = async (): Promise<Stats> => {
         studentName: studentsMap.get(data.student_id) || 'Unknown Student',
         ...data
       };
-    })
-    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
+    });
 
   return {
     totalStudents,
