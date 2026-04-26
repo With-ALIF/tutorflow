@@ -1,16 +1,18 @@
 import React from "react";
 import { Trash2, Edit2, MoreHorizontal, User as UserIcon } from "lucide-react";
 import { Expense } from "../types/expense.types";
+import { Student } from "../../../types/student";
 import { cn } from "../../../lib/utils";
 import { categoryIcons, categoryColors } from "../constants/expenseConstants";
 
 interface ExpenseTableRowProps {
   expense: Expense;
+  student?: Student;
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
 }
 
-export const ExpenseTableRow: React.FC<ExpenseTableRowProps> = ({ expense, onEdit, onDelete }) => {
+export const ExpenseTableRow: React.FC<ExpenseTableRowProps> = ({ expense, student, onEdit, onDelete }) => {
   const Icon = categoryIcons[expense.category] || MoreHorizontal;
   return (
     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
@@ -21,8 +23,17 @@ export const ExpenseTableRow: React.FC<ExpenseTableRowProps> = ({ expense, onEdi
       <td className="px-6 py-4">
         {expense.studentName ? (
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-              <UserIcon className="w-3 h-3 text-slate-400" />
+            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+              {student?.photo ? (
+                <img 
+                  src={student.photo} 
+                  alt={expense.studentName} 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <UserIcon className="w-3 h-3 text-slate-400" />
+              )}
             </div>
             <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{expense.studentName}</span>
           </div>

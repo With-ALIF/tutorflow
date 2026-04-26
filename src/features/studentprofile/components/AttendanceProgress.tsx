@@ -20,7 +20,7 @@ export const AttendanceProgress = ({
   onDownload: () => void 
 }) => (
   <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm p-8">
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
           <Clock className="w-6 h-6" />
@@ -30,18 +30,22 @@ export const AttendanceProgress = ({
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Current academic cycle tracking</p>
         </div>
       </div>
-      <div className="flex flex-col items-end gap-2">
+      
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="text-left md:text-right">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-0.5">Cycle Progress</span>
+          <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-none">
+            {currentCycleAttendance} <span className="text-slate-300 dark:text-slate-600 text-sm font-medium">/ {lecturesPerMonth}</span>
+          </p>
+        </div>
+        
         <button 
           onClick={onDownload}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-colors"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-600/20 active:scale-95 whitespace-nowrap"
         >
           <Download className="w-4 h-4" />
-          PDF
+          Download Full Report
         </button>
-        <div className="text-right">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cycle Progress</span>
-          <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{currentCycleAttendance} <span className="text-slate-300 dark:text-slate-600 text-sm font-medium">/ {lecturesPerMonth}</span></p>
-        </div>
       </div>
     </div>
 

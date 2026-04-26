@@ -9,7 +9,7 @@ export const ExpenseHeader: React.FC<ExpenseHeaderProps> = ({ onAddClick }) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight border-b-4 border-emerald-500 w-fit pb-2">
+        <h1 className="text-2xl min-[400px]:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight pb-1 whitespace-nowrap">
           Expense Tracker
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">

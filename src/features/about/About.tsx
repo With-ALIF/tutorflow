@@ -13,7 +13,7 @@ export const About: React.FC = () => {
   const content = aboutData[lang];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-20 pt-4 px-4 overflow-x-hidden">
+    <div className="max-w-5xl mx-auto space-y-12 pt-4 px-4 overflow-x-hidden">
       {/* Back Button */}
       <motion.button
         initial={{ opacity: 0, x: -10 }}

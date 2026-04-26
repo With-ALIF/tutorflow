@@ -1,15 +1,17 @@
 import React from "react";
 import { Receipt } from "lucide-react";
 import { Expense } from "../types/expense.types";
+import { Student } from "../../../types/student";
 import { ExpenseTableRow } from "./ExpenseTableRow";
 
 interface ExpenseTableProps {
   expenses: Expense[];
+  students: Student[];
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
 }
 
-export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, onEdit, onDelete }) => {
+export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, students, onEdit, onDelete }) => {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 overflow-hidden shadow-sm">
       <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
@@ -33,7 +35,18 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, onEdit, on
             {expenses.length === 0 ? (
               <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm italic font-medium">No expenses for this filter</td></tr>
             ) : (
-              expenses.map(expense => <ExpenseTableRow key={expense.id} expense={expense} onEdit={onEdit} onDelete={onDelete} />)
+              expenses.map(expense => {
+                const student = students.find(s => s.id === expense.studentId);
+                return (
+                  <ExpenseTableRow 
+                    key={expense.id} 
+                    expense={expense} 
+                    student={student}
+                    onEdit={onEdit} 
+                    onDelete={onDelete} 
+                  />
+                );
+              })
             )}
           </tbody>
         </table>

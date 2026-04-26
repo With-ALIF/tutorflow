@@ -3,6 +3,7 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { Student } from "../../../types/student";
 import { AttendanceRecord } from "../../../types/attendance";
 import { FeeRecord } from "../../../types/fee";
+import { Expense } from "../../expenses/types/expense.types";
 
 export const fetchStudentData = async (id: string) => {
   if (!id || !auth.currentUser) throw new Error("User not authenticated");
@@ -27,5 +28,12 @@ export const fetchStudentData = async (id: string) => {
     .filter((f) => f.student_id === id)
     .sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime());
 
-  return { student, attendance, fees };
+  const expensesQuery = query(collection(db, "expenses"), where("userId", "==", auth.currentUser.uid));
+  const expensesSnapshot = await getDocs(expensesQuery);
+  const expenses = expensesSnapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() } as Expense))
+    .filter((e) => e.studentId === id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return { student, attendance, fees, expenses };
 };

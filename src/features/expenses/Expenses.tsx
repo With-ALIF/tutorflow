@@ -32,10 +32,10 @@ export const Expenses: React.FC = () => {
   if (loading && expenses.length === 0) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div></div>;
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8">
       <ExpenseHeader onAddClick={() => setIsModalOpen(true)} />
       <ExpenseFilters filterMonth={month} setFilterMonth={setMonth} filterStudentId={studentId} setFilterStudentId={setStudentId} students={students} totalExpenses={total} />
-      <ExpenseTable expenses={filtered} onEdit={(e) => { setEditingExpense(e); setIsModalOpen(true); }} onDelete={deleteExpense} />
+      <ExpenseTable expenses={filtered} students={students} onEdit={(e) => { setEditingExpense(e); setIsModalOpen(true); }} onDelete={deleteExpense} />
       <AnimatePresence>
         {isModalOpen && <ExpenseModal onClose={() => { setIsModalOpen(false); setEditingExpense(null); }} onSave={handleSave} expense={editingExpense} students={students} />}
       </AnimatePresence>

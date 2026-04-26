@@ -17,7 +17,11 @@ export const Fees: React.FC = () => {
     handleMarkAsPaid,
     handleMarkAsUnpaid,
     handleDownloadPDF,
-    handleAddPayment
+    handleAddPayment,
+    sortConfig,
+    requestSort,
+    searchTerm,
+    setSearchTerm
   } = useFees();
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading records...</div>;
@@ -33,6 +37,10 @@ export const Fees: React.FC = () => {
             onDownloadPDF={handleDownloadPDF} 
             onMarkAsPaid={handleMarkAsPaid} 
             onMarkAsUnpaid={handleMarkAsUnpaid}
+            onSort={requestSort}
+            sortConfig={sortConfig}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           />
         </div>
 

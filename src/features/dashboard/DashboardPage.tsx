@@ -17,7 +17,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10">
       <header>
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard Overview</h1>
+        <h1 className="text-2xl min-[400px]:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">Dashboard Overview</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm md:text-base">Welcome back! Here’s a quick summary of what’s happening in your tuition center today.</p>
       </header>
 

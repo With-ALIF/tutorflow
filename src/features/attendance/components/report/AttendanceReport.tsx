@@ -26,7 +26,7 @@ export const AttendanceReport: React.FC<AttendanceReportProps> = ({
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-center sm:justify-end">
         <MonthPicker reportMonth={reportMonth} setReportMonth={setReportMonth} />
       </div>
 
