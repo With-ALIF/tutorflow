@@ -1,0 +1,129 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "A student in the tuition center",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
+        "name": { "type": "string", "description": "Full name" },
+        "class": { "type": "string", "description": "Class name" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "subject": { "type": "string", "description": "Subject" },
+        "address": { "type": "string", "description": "Address" },
+        "batch": { "type": "string", "description": "Batch or Section" },
+        "monthly_fee": { "type": "number", "description": "Monthly fee" },
+        "lectures_per_month": { "type": "number", "description": "Lectures per month" },
+        "lectures_per_week": { "type": "number", "description": "Lectures per week" },
+        "class_days": { "type": "array", "items": { "type": "string" }, "description": "Days of the week for classes" },
+        "join_date": { "type": "string", "format": "date", "description": "Join date" }
+      },
+      "required": ["id", "userId", "name", "class", "phone"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Attendance record for a student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
+        "student_id": { "type": "string", "description": "Student ID" },
+        "date": { "type": "string", "format": "date", "description": "Date of attendance" },
+        "status": { "type": "string", "enum": ["present", "absent"], "description": "Attendance status" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "student_id", "date", "status"]
+    },
+    "Fee": {
+      "title": "Fee",
+      "description": "Fee record for a student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
+        "student_id": { "type": "string", "description": "Student ID" },
+        "amount": { "type": "number", "description": "Fee amount" },
+        "payment_date": { "type": "string", "format": "date", "description": "Date of payment" },
+        "fee_month": { "type": "string", "description": "Month of fee (YYYY-MM)" },
+        "status": { "type": "string", "enum": ["paid", "due"], "description": "Fee status" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "student_id", "amount", "fee_month", "status"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "An expense record related to tuition",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
+        "title": { "type": "string", "description": "Description of the expense" },
+        "amount": { "type": "number", "description": "Expense amount" },
+        "category": { "type": "string", "enum": ["Transport", "Books", "Supplies", "Food", "Others"], "description": "Expense category" },
+        "date": { "type": "string", "format": "date", "description": "Date of expense" },
+        "studentId": { "type": "string", "description": "ID of the associated student" },
+        "studentName": { "type": "string", "description": "Name of the associated student" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "title", "amount", "category", "date"]
+    },
+    "Routine": {
+      "title": "Routine",
+      "description": "A class schedule for a specific batch",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
+        "batchName": { "type": "string", "description": "Name of the batch" },
+        "day": { "type": "string", "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "description": "Day of the week" },
+        "startTime": { "type": "string", "description": "Start time (HH:MM)" },
+        "endTime": { "type": "string", "description": "End time (HH:MM)" },
+        "subject": { "type": "string", "description": "Subject being taught" },
+        "room": { "type": "string", "description": "Room number or name" },
+        "color": { "type": "string", "description": "Hex color for UI display" }
+      },
+      "required": ["userId", "batchName", "day", "startTime", "endTime"]
+    },
+    "Batch": {
+      "title": "Batch",
+      "description": "A group of students",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "userId": { "type": "string", "description": "User ID of the owner" },
+        "name": { "type": "string", "description": "Batch name" },
+        "description": { "type": "string", "description": "Brief description" },
+        "color": { "type": "string", "description": "Hex color for UI" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "name"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": { "$ref": "Student" },
+      "description": "Collection of students"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": { "$ref": "Attendance" },
+      "description": "Collection of attendance records"
+    },
+    "/fees/{feeId}": {
+      "schema": { "$ref": "Fee" },
+      "description": "Collection of fee records"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "Expense" },
+      "description": "Collection of expense records"
+    },
+    "/routines/{routineId}": {
+      "schema": { "$ref": "Routine" },
+      "description": "Collection of class routines"
+    },
+    "/batches/{batchId}": {
+      "schema": { "$ref": "Batch" },
+      "description": "Collection of student batches"
+    }
+  }
+}
