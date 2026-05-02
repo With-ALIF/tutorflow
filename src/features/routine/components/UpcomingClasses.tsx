@@ -8,16 +8,32 @@ import { cn } from "../../../lib/utils";
 export const UpcomingClasses: React.FC = () => {
   const { routines, loading: routineLoading } = useRoutine();
   const { students, loading: studentsLoading } = useStudents();
+  const [activeTab, setActiveTab] = React.useState<'today' | 'tomorrow'>('today');
 
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  
   const getTodayDay = () => {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     return days[new Date().getDay()];
   };
 
+  const getTomorrowDay = () => {
+    const tomorrowIndex = (new Date().getDay() + 1) % 7;
+    return days[tomorrowIndex];
+  };
+
   const today = getTodayDay();
+  const tomorrow = getTomorrowDay();
+
   const todayClasses = routines
     .filter(r => r.day === today)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const tomorrowClasses = routines
+    .filter(r => r.day === tomorrow)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const currentClasses = activeTab === 'today' ? todayClasses : tomorrowClasses;
+  const currentDay = activeTab === 'today' ? today : tomorrow;
 
   const loading = routineLoading || studentsLoading;
 
@@ -31,30 +47,49 @@ export const UpcomingClasses: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200/60 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
             <Play className="w-5 h-5 fill-current" />
           </div>
           <div>
-            <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight">Today's Classes</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{today} Schedule</p>
+            <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight">Classes Routine</h3>
+            <div className="flex gap-4 mt-1">
+              <button 
+                onClick={() => setActiveTab('today')}
+                className={cn(
+                  "text-[10px] font-bold uppercase tracking-widest transition-colors",
+                  activeTab === 'today' ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                Today ({today})
+              </button>
+              <button 
+                onClick={() => setActiveTab('tomorrow')}
+                className={cn(
+                  "text-[10px] font-bold uppercase tracking-widest transition-colors",
+                  activeTab === 'tomorrow' ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                Tomorrow ({tomorrow})
+              </button>
+            </div>
           </div>
         </div>
-        <div className="px-4 py-2 bg-indigo-500/10 rounded-3xl flex flex-col items-center justify-center min-w-[80px]">
-          <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 leading-none">{todayClasses.length}</span>
+        <div className="px-4 py-2 bg-indigo-500/10 rounded-3xl flex flex-col items-center justify-center min-w-[80px] self-start sm:self-auto">
+          <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 leading-none">{currentClasses.length}</span>
           <span className="text-[8px] font-black text-indigo-500/70 dark:text-indigo-400/70 uppercase tracking-widest mt-1">Scheduled</span>
         </div>
       </div>
 
       <div className="p-6 space-y-4 overflow-y-auto max-h-[400px] flex-1">
-        {todayClasses.length === 0 ? (
+        {currentClasses.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center text-center">
             <Calendar className="w-12 h-12 text-slate-200 dark:text-slate-800 mb-4" />
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest italic">No classes scheduled today</p>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest italic">No classes scheduled {activeTab}</p>
           </div>
         ) : (
-          todayClasses.map((routine) => (
+          currentClasses.map((routine) => (
             <div key={routine.id} className="relative group p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-transparent hover:border-blue-500/20 transition-all">
               <div className="flex items-center gap-4">
                 <div className="flex flex-col items-center justify-center px-3 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 min-w-[70px]">

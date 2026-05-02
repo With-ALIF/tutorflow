@@ -53,12 +53,20 @@ export const RoutineCalendar: React.FC<RoutineCalendarProps> = ({ routines, stud
                   style={{ backgroundColor: routine.color || '#4f46e5' }}
                 />
                 
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1 scale-90 group-hover:scale-100">
-                  <button onClick={() => onEdit(routine)} className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all shadow-sm bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-                    <Edit2 className="w-3.5 h-3.5" />
+                <div className="absolute top-4 right-4 flex items-center gap-2">
+                  <button 
+                    onClick={() => onEdit(routine)} 
+                    className="p-2.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 shadow-sm border border-indigo-100/50 dark:border-indigo-500/20 active:scale-95"
+                    title="Edit Routine"
+                  >
+                    <Edit2 className="w-4 h-4" />
                   </button>
-                  <button onClick={() => onDelete(routine.id)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-xl transition-all shadow-sm bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-                    <Trash2 className="w-3.5 h-3.5" />
+                  <button 
+                    onClick={() => onDelete(routine.id)} 
+                    className="p-2.5 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl transition-all hover:bg-red-600 hover:text-white dark:hover:bg-red-600 shadow-sm border border-red-100/50 dark:border-red-500/20 active:scale-95"
+                    title="Delete Routine"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 

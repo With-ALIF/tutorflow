@@ -17,17 +17,22 @@ export default defineConfig(({mode}) => {
           name: 'Tuition Hub',
           short_name: 'TuitionHub',
           description: 'A comprehensive student management system for tutors',
-          theme_color: '#10b981',
+          theme_color: '#4f46e5',
+          background_color: '#ffffff',
+          display: 'standalone',
+          orientation: 'portrait',
           icons: [
             {
               src: 'https://picsum.photos/seed/tuition192/192',
               sizes: '192x192',
-              type: 'image/png'
+              type: 'image/png',
+              purpose: 'any maskable'
             },
             {
               src: 'https://picsum.photos/seed/tuition512/512',
               sizes: '512x512',
-              type: 'image/png'
+              type: 'image/png',
+              purpose: 'any maskable'
             }
           ]
         }
