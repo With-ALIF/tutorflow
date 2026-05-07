@@ -1,0 +1,110 @@
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
+import { ToastContext } from "./context/ToastContext";
+import DashboardPage from "./features/dashboard/DashboardPage";
+import { Students as StudentsFeature } from "./features/students/Students";
+import { AttendanceFeature } from "./features/attendance/AttendanceFeature";
+import { Fees as FeesFeature } from "./features/fees/Fees";
+import StudentProfilePage from "./features/studentprofile/StudentProfile";
+import { Login as LoginFeature } from "./features/auth/Login";
+import { Profile as ProfileFeature } from "./features/profile/Profile";
+import { Expenses as ExpensesFeature } from "./features/expenses/Expenses";
+import { RoutinePage as RoutineFeature } from "./features/routine/RoutinePage";
+import BatchPage from "./features/batches/BatchPage";
+import { About as AboutFeature } from "./features/about/About";
+import Layout from "./components/Layout";
+import { auth, db } from "./firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, getDocFromServer } from "firebase/firestore";
+import { X, CheckCircle, AlertCircle } from "lucide-react";
+
+export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if(error instanceof Error) {
+          if (error.message.includes('the client is offline') || error.message.includes('Failed to fetch')) {
+            console.error("Please check your Firebase configuration. It might be a remixed app with an invalid database ID.");
+          }
+          // Skip logging for other errors (like missing permissions), as this is simply a connection test.
+        }
+      }
+    };
+    testConnection();
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <ToastContext.Provider value={{ showToast }}>
+        <Router>
+          <Routes>
+            <Route path="/login" element={!user ? <LoginFeature /> : <Navigate to="/" />} />
+            
+            {/* Routes using Layout */}
+            <Route element={<Layout />}>
+              <Route path="/about" element={<AboutFeature />} />
+              
+              {/* Protected Routes */}
+              <Route path="/" element={user ? <Outlet /> : <Navigate to="/login" />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="students" element={<StudentsFeature />} />
+                <Route path="students/:id" element={<StudentProfilePage />} />
+                <Route path="batches" element={<BatchPage />} />
+                <Route path="attendance" element={<AttendanceFeature />} />
+                <Route path="fees" element={<FeesFeature />} />
+                <Route path="expenses" element={<ExpensesFeature />} />
+                <Route path="routine" element={<RoutineFeature />} />
+                <Route path="profile" element={<ProfileFeature />} />
+              </Route>
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+
+        {/* Toast Notification */}
+        <div className="fixed bottom-4 right-4 z-[100] space-y-2">
+          {toast && (
+            <div className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border animate-in slide-in-from-right-full duration-300 ${
+              toast.type === 'success' ? 'bg-indigo-50 border-indigo-100 text-indigo-800' : 'bg-red-50 border-red-100 text-red-800'
+            }`}>
+              {toast.type === 'success' ? <CheckCircle className="w-5 h-5 text-indigo-600" /> : <AlertCircle className="w-5 h-5" />}
+              <p className="text-sm font-semibold">{toast.message}</p>
+              <button onClick={() => setToast(null)} className="ml-2 p-1 hover:bg-black/5 rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </ToastContext.Provider>
+    </ThemeProvider>
+  );
+}

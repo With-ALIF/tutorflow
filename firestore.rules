@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    function isNewDocOwner() {
+      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /students/{studentId} {
+      allow get, list: if isDocOwner();
+      allow create: if isNewDocOwner();
+      allow update: if isDocOwner() && isNewDocOwner();
+      allow delete: if isDocOwner();
+    }
+
+    match /attendance/{attendanceId} {
+      allow get, list: if isDocOwner();
+      allow create: if isNewDocOwner();
+      allow update: if isDocOwner() && isNewDocOwner();
+      allow delete: if isDocOwner();
+    }
+
+    match /fees/{feeId} {
+      allow get, list: if isDocOwner();
+      allow create: if isNewDocOwner();
+      allow update: if isDocOwner() && isNewDocOwner();
+      allow delete: if isDocOwner();
+    }
+
+    match /expenses/{expenseId} {
+      allow get, list: if isDocOwner();
+      allow create: if isNewDocOwner();
+      allow update: if isDocOwner() && isNewDocOwner();
+      allow delete: if isDocOwner();
+    }
+
+    match /routines/{routineId} {
+      allow get, list: if isDocOwner();
+      allow create: if isNewDocOwner();
+      allow update: if isDocOwner() && isNewDocOwner();
+      allow delete: if isDocOwner();
+    }
+
+    match /batches/{batchId} {
+      allow get, list: if isDocOwner();
+      allow create: if isNewDocOwner();
+      allow update: if isDocOwner() && isNewDocOwner();
+      allow delete: if isDocOwner();
+    }
+  }
+}
+

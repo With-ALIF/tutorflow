@@ -1,0 +1,64 @@
+{
+  "en": {
+    "title": "About Tutor Management System",
+    "description": "A comprehensive solution for private tutors to manage their teaching profession efficiently.",
+    "features": [
+      {
+        "title": "Student Management",
+        "details": "Easy admission process with details like name, class, batch, and photo. Supports both local upload and web URLs for student photos."
+      },
+      {
+        "title": "Attendance Tracking",
+        "details": "Daily attendance marking system with real-time status updates and monthly summaries for each student."
+      },
+      {
+        "title": "Fee Management",
+        "details": "Keep record of student tuition fees, payment dates, and history. Never miss a payment again."
+      },
+      {
+        "title": "Expense Tracker",
+        "details": "Track your teaching-related costs (Transport, Books, etc.). You can even link expenses to specific students."
+      },
+      {
+        "title": "Smart Dashboard",
+        "details": "A centralized view of your total students, earnings, and expenses with visual charts for better decision making."
+      },
+      {
+        "title": "Student Profiles",
+        "details": "Dedicated profile for each student showing their overall performance, attendance growth, and payment consistency."
+      }
+    ],
+    "mission": "To empower local tutors with digital tools that simplify administration and allow them to focus on what matters most: Teaching."
+  },
+  "bn": {
+    "title": "টিউটর ম্যানেজমেন্ট সিস্টেম সম্পর্কে",
+    "description": "প্রাইভেট টিউটরদের জন্য তাদের শিক্ষকতা জীবনকে আরও সহজ এবং সুশৃঙ্খল করার একটি পূর্ণাঙ্গ সমাধান।",
+    "features": [
+      {
+        "title": "ছাত্র-ছাত্রী ব্যবস্থাপনা",
+        "details": "নাম, ক্লাস, ব্যাচ এবং ছবি সহ সহজ ভর্তি প্রক্রিয়া। ছাত্র-ছাত্রীদের ছবির জন্য লোকাল আপলোড এবং ওয়েব ইউআরএল (URL) উভয়ই সাপোর্ট করে।"
+      },
+      {
+        "title": "উপস্থিতি ট্র্যাকিং",
+        "details": "প্রতিদিনের উপস্থিতি চিহ্নিত করার সিস্টেম এবং প্রতিটি ছাত্র-ছাত্রীর জন্য মাসিক উপস্থিতির বিস্তারিত তথ্য।"
+      },
+      {
+        "title": "টিউশন ফি ব্যবস্থাপনা",
+        "details": "ছাত্র-ছাত্রীদের টিউশন ফি, পেমেন্টের তারিখ এবং আগের রেকর্ডের হিসাব রাখুন। কোনো পেমেন্ট আর বাদ পড়বে না।"
+      },
+      {
+        "title": "ব্যয় ট্র্যাকার (Expense Tracker)",
+        "details": "শিক্ষকতা সংক্রান্ত খরচ (যাতায়াত, বই কেনা ইত্যাদি) ট্র্যাক করুন। এমনকি নির্দিষ্ট ছাত্রের বিপরীতে খরচ এন্ট্রি করার সুবিধাও রয়েছে।"
+      },
+      {
+        "title": "স্মার্ট ড্যাশবোর্ড",
+        "details": "এক নজরে মোট ছাত্র সংখ্যা, আয় এবং ব্যয়ের হিসাব। সিদ্ধান্ত নিতে সহায়তার জন্য প্রয়োজনীয় চার্ট ও গ্রাফ।"
+      },
+      {
+        "title": "স্টুডেন্ট প্রোফাইল",
+        "details": "প্রতিটি ছাত্র-ছাত্রীর জন্য আলাদা প্রোফাইল যেখানে তাদের পারফরম্যান্স, উপস্থিতির হার এবং পেমেন্ট রেকর্ড দেখা যাবে।"
+      }
+    ],
+    "mission": "ডিজিটাল টুলের মাধ্যমে টিউটরদের প্রশাসনিক কাজ সহজ করা, যাতে তারা মূল কাজে মনোনিবেশ করতে পারেন: শিক্ষকতা।"
+  }
+}
