@@ -2,7 +2,7 @@ import { AttendanceRecord } from "../../../types/attendance";
 import { Student } from "../../../types/student";
 
 export const calculateStats = (attendance: AttendanceRecord[], student: Student) => {
-  const totalPresent = attendance.filter(a => a.status === 'present').length;
+  const totalPresent = attendance.filter(a => a.status === 'present' || a.status === 'caught_up').length;
   const lecturesPerMonth = student.lectures_per_month || 12;
   const monthsCompleted = Math.floor(totalPresent / lecturesPerMonth);
   const currentCycleAttendance = totalPresent % lecturesPerMonth;

@@ -19,20 +19,38 @@ export const AttendanceList = ({
         <div className="flex items-center gap-4">
           <div className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-            record.status === 'present' ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+            record.status === 'caught_up'
+              ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              : record.status === 'present' 
+                ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" 
+                : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
           )}>
-            {record.status === 'present' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+            {record.status === 'caught_up' ? (
+              <CheckCircle2 className="w-5 h-5 text-amber-500" />
+            ) : record.status === 'present' ? (
+              <CheckCircle2 className="w-5 h-5" />
+            ) : (
+              <XCircle className="w-5 h-5" />
+            )}
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{new Date(record.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">{record.status === 'present' ? 'Attended' : 'Missed'}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{new Date(record.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+            </div>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
+              {record.status === 'caught_up' ? 'Caught Up' : record.status === 'present' ? 'Attended' : 'Missed'}
+            </p>
           </div>
         </div>
         <span className={cn(
           "px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors",
-          record.status === 'present' ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white" : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 group-hover:bg-red-600 group-hover:text-white"
+          record.status === 'caught_up'
+            ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-600 group-hover:text-white"
+            : record.status === 'present' 
+              ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white" 
+              : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 group-hover:bg-red-600 group-hover:text-white"
         )}>
-          {record.status}
+          {record.status === 'caught_up' ? 'Caught Up' : record.status}
         </span>
       </div>
     ))}

@@ -9,14 +9,12 @@ import { Fees as FeesFeature } from "./features/fees/Fees";
 import StudentProfilePage from "./features/studentprofile/StudentProfile";
 import { Login as LoginFeature } from "./features/auth/Login";
 import { Profile as ProfileFeature } from "./features/profile/Profile";
-import { Expenses as ExpensesFeature } from "./features/expenses/Expenses";
 import { RoutinePage as RoutineFeature } from "./features/routine/RoutinePage";
 import BatchPage from "./features/batches/BatchPage";
 import { About as AboutFeature } from "./features/about/About";
 import Layout from "./components/Layout";
-import { auth, db } from "./firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDocFromServer } from "firebase/firestore";
+import { supabase } from "./lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import { X, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function App() {
@@ -30,26 +28,17 @@ export default function App() {
   };
 
   useEffect(() => {
-    const testConnection = async () => {
-      try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
-      } catch (error) {
-        if(error instanceof Error) {
-          if (error.message.includes('the client is offline') || error.message.includes('Failed to fetch')) {
-            console.error("Please check your Firebase configuration. It might be a remixed app with an invalid database ID.");
-          }
-          // Skip logging for other errors (like missing permissions), as this is simply a connection test.
-        }
-      }
-    };
-    testConnection();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   if (loading) {
@@ -79,7 +68,6 @@ export default function App() {
                 <Route path="batches" element={<BatchPage />} />
                 <Route path="attendance" element={<AttendanceFeature />} />
                 <Route path="fees" element={<FeesFeature />} />
-                <Route path="expenses" element={<ExpensesFeature />} />
                 <Route path="routine" element={<RoutineFeature />} />
                 <Route path="profile" element={<ProfileFeature />} />
               </Route>

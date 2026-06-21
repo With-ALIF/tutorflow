@@ -19,7 +19,9 @@ export const AttendanceItem = ({ activity }: AttendanceItemProps) => (
     </div>
     <div className="flex-1">
       <p className="text-sm font-bold text-slate-900 dark:text-white">{activity.studentName}</p>
-      <p className="text-xs text-slate-500 dark:text-slate-400">{activity.date}</p>
+      <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-tight">
+        {new Date(activity.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+      </p>
     </div>
     <div className="text-right">
       <span className={cn(

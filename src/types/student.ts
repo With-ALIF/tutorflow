@@ -1,5 +1,6 @@
 export interface Student {
   id: string;
+  user_id: string;
   name: string;
   class: string;
   phone: string;
@@ -14,8 +15,10 @@ export interface Student {
   batch?: string;
   status?: 'active' | 'finished';
   end_date?: string;
+  telegram_chat_id?: string;
+  guardian_name?: string;
 }
 
-export interface NewStudent extends Omit<Student, 'id'> {
+export type NewStudent = Omit<Student, 'id' | 'user_id'> & {
   id?: string;
-}
+};

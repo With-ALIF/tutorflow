@@ -5,22 +5,22 @@ import {
   Users, 
   CalendarCheck, 
   CreditCard, 
-  User,
+  User as UserIcon,
   X,
   LogOut,
   Sun,
   Moon,
-  Receipt,
   Info,
   LogIn,
   CalendarDays,
   Layers
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { auth, signOut } from "../firebase";
+import { supabase } from "../lib/supabase";
 import Logo from "./Logo";
 import { motion } from "motion/react";
 import { useTheme } from "../context/ThemeContext";
+import type { User } from "@supabase/supabase-js";
 
 const privateNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -29,8 +29,7 @@ const privateNavItems = [
   { icon: CalendarCheck, label: "Attendance", path: "/attendance" },
   { icon: CalendarDays, label: "Routine", path: "/routine" },
   { icon: CreditCard, label: "Tuition Fees", path: "/fees" },
-  { icon: Receipt, label: "Expenses", path: "/expenses" },
-  { icon: User, label: "Profile", path: "/profile" },
+  { icon: UserIcon, label: "Profile", path: "/profile" },
 ];
 
 const publicNavItems = [
@@ -42,28 +41,32 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onClose }: SidebarProps) {
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const { theme, toggleTheme } = useTheme();
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!user;
 
   useEffect(() => {
-    if (auth.currentUser) {
-      setUserEmail(auth.currentUser.email || null);
-    } else {
-      setUserEmail(null);
-    }
-  }, [auth.currentUser]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
 
   const navItems = isAuthenticated 
-    ? [...privateNavItems.slice(0, 7), ...publicNavItems, privateNavItems[7]] 
+    ? [...privateNavItems.slice(0, 6), ...publicNavItems, privateNavItems[6]] 
     : publicNavItems;
 
   return (
@@ -123,7 +126,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
               </p>
               {isAuthenticated && (
                 <p className="text-xs text-slate-700 dark:text-slate-300 truncate font-medium max-w-[120px]">
-                  {userEmail || "User"}
+                  {user?.email || "User"}
                 </p>
               )}
             </div>

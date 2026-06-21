@@ -1,5 +1,6 @@
 import React from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, parseISO } from "date-fns";
 
 interface DatePickerProps {
   date: string;
@@ -8,13 +9,17 @@ interface DatePickerProps {
 
 export const DatePicker: React.FC<DatePickerProps> = ({ date, setDate }) => {
   const changeDate = (days: number) => {
-    const d = new Date(date);
-    d.setDate(d.getDate() + days);
-    setDate(d.toISOString().split('T')[0]);
+    const [year, month, day] = date.split('-').map(Number);
+    const d = new Date(Date.UTC(year, month - 1, day));
+    d.setUTCDate(d.getUTCDate() + days);
+    const yyyy = d.getUTCFullYear();
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    setDate(`${yyyy}-${mm}-${dd}`);
   };
 
   return (
-    <div className="flex items-center gap-3 sm:gap-4 bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm w-full sm:w-auto">
+    <div className="flex items-center gap-3 sm:gap-4 bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700 shadow-sm w-full">
       <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
         <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
@@ -23,7 +28,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({ date, setDate }) => {
           <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300" />
         </button>
         <div className="flex-1 min-w-0 px-1 sm:px-2">
-          <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Attendance Date</p>
+          <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate flex items-center gap-1">
+            <span>Attendance Date</span>
+            {(() => {
+              try {
+                const dayName = format(parseISO(date), "EEEE");
+                return <span className="text-emerald-500 dark:text-emerald-400 font-black">({dayName})</span>;
+              } catch (_) {}
+              return null;
+            })()}
+          </p>
           <input 
             type="date" 
             value={date}

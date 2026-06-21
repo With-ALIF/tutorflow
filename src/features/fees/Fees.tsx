@@ -18,6 +18,7 @@ export const Fees: React.FC = () => {
     handleMarkAsUnpaid,
     handleDownloadPDF,
     handleAddPayment,
+    handleDeleteFee,
     sortConfig,
     requestSort,
     searchTerm,
@@ -37,6 +38,7 @@ export const Fees: React.FC = () => {
             onDownloadPDF={handleDownloadPDF} 
             onMarkAsPaid={handleMarkAsPaid} 
             onMarkAsUnpaid={handleMarkAsUnpaid}
+            onDeleteFee={handleDeleteFee}
             onSort={requestSort}
             sortConfig={sortConfig}
             searchTerm={searchTerm}

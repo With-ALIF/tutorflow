@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ToastContext } from "../../../context/ToastContext";
-import { fetchStudents, fetchFees, markFeeAsPaid, markFeeAsUnpaid, addPayment } from "../services/feeService";
+import { fetchStudents, fetchFees, markFeeAsPaid, markFeeAsUnpaid, addPayment, deleteFee } from "../services/feeService";
 import { Student, FeeRecord } from "../types/fee.types";
 import { downloadPDF } from "../utils/feeUtils";
+import { notifyPayment } from "@/src/utils/telegramService";
 
 export const useFees = () => {
   const { showToast } = useContext(ToastContext);
@@ -44,9 +45,23 @@ export const useFees = () => {
 
   const handleMarkAsPaid = async (id: string) => {
     try {
+      const fee = fees.find(f => f.id === id);
       await markFeeAsPaid(id);
       fetchData();
       showToast("Fee marked as paid!");
+      if (fee) {
+        try {
+          await notifyPayment({
+            studentName: fee.students?.name || "Student",
+            amount: fee.amount,
+            paymentDate: new Date().toISOString().split('T')[0],
+            feeMonth: fee.fee_month,
+            status: 'paid'
+          });
+        } catch (msgErr) {
+          console.error("Error sending Telegram payment notification:", msgErr);
+        }
+      }
     } catch (err: any) {
       console.error("Error updating fee status:", err);
       showToast("Failed to update fee status", "error");
@@ -118,10 +133,24 @@ export const useFees = () => {
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const student = students.find(s => s.id === newPayment.student_id);
       await addPayment(newPayment);
       setIsModalOpen(false);
       fetchData();
       showToast("Payment recorded successfully!");
+      if (student) {
+        try {
+          await notifyPayment({
+            studentName: student.name,
+            amount: newPayment.amount,
+            paymentDate: newPayment.payment_date,
+            feeMonth: newPayment.fee_month,
+            status: newPayment.status as any
+          });
+        } catch (msgErr) {
+          console.error("Error sending Telegram payment notification on creation:", msgErr);
+        }
+      }
       setNewPayment({
         student_id: "",
         amount: 0,
@@ -132,6 +161,17 @@ export const useFees = () => {
     } catch (err: any) {
       console.error("Error recording payment:", err);
       showToast("Failed to record payment", "error");
+    }
+  };
+
+  const handleDeleteFee = async (id: string) => {
+    try {
+      await deleteFee(id);
+      fetchData();
+      showToast("Payment record deleted!");
+    } catch (err: any) {
+      console.error("Error deleting fee:", err);
+      showToast("Failed to delete record", "error");
     }
   };
 
@@ -150,6 +190,7 @@ export const useFees = () => {
     handleMarkAsPaid,
     handleMarkAsUnpaid,
     handleDownloadPDF,
-    handleAddPayment
+    handleAddPayment,
+    handleDeleteFee
   };
 };

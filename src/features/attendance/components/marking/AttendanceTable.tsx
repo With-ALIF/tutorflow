@@ -2,45 +2,82 @@ import React from "react";
 import { Student, AttendanceStatus } from "../../types/attendance.types";
 import { StudentRow } from "./StudentRow";
 
+import { Routine } from "../../../routine/types/routine.types";
+
 interface AttendanceTableProps {
   students: Student[];
   records: Record<string, AttendanceStatus>;
-  onStatusChange: (studentId: string, status: AttendanceStatus) => void;
+  sessions: any[];
+  onStatusChange: (studentId: string, status: AttendanceStatus, shift: 'Morning' | 'Evening') => void;
 }
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({ 
   students, 
   records, 
-  onStatusChange 
+  sessions,
+  onStatusChange,
 }) => {
-  if (students.length === 0) {
+  if (sessions.length === 0) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-12 lg:p-20 border border-slate-200/60 dark:border-slate-700 shadow-sm text-center">
-        <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
-          <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-[2rem] flex items-center justify-center text-slate-300 dark:text-slate-700 shadow-inner">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">No classes scheduled</h4>
-            <p className="text-sm text-slate-400 font-medium">There are no batch routines defined for this day in your schedule.</p>
-          </div>
-        </div>
+      <div className="text-center py-8">
+        <p className="text-xs text-slate-400 font-medium">No active classes found for this date.</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-      {students.map((student) => (
-        <StudentRow 
-          key={student.id} 
-          student={student} 
-          currentStatus={records[student.id]} 
-          onStatusChange={onStatusChange} 
-        />
-      ))}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 pt-0">
+      {sessions.map((routine) => {
+        const batchStudents = students.filter(s => s.batch === routine.batchName);
+        const routineShift = routine.shift || 'Morning';
+
+        if (batchStudents.length === 0) return null;
+
+        return (
+          <div 
+            key={routine.id} 
+            className="p-5 sm:p-6 bg-slate-50/50 dark:bg-slate-900/10 rounded-[2rem] border border-slate-100 dark:border-slate-800/80 space-y-4"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div 
+                  className="w-1.5 h-4 rounded-full" 
+                  style={{ backgroundColor: routine.color || '#4f46e5' }} 
+                />
+                <h5 className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">
+                  {routine.batchName} • {routine.startTime} ({routineShift})
+                </h5>
+              </div>
+          <div className="grid grid-cols-1 gap-4">
+                 {batchStudents.map((student) => {
+                   let recordKey = `${student.id}_${routineShift}`;
+                   let realStatus = records[recordKey];
+                   let caughtUpDate: string | undefined;
+
+                   if (!realStatus) {
+                     // Check if caught up
+                     const caughtUpKey = Object.keys(records).find(k => k.startsWith(`${student.id}_CaughtUp_`) && k.endsWith(`_${routineShift}`));
+                     if (caughtUpKey) {
+                       realStatus = records[caughtUpKey]; // 'caught_up'
+                       caughtUpDate = caughtUpKey.split('_CaughtUp_')[1].split('_')[0];
+                     }
+                   }
+
+                   return (
+                     <StudentRow 
+                       key={`${student.id}_${routine.id}`} 
+                       student={student} 
+                       currentStatus={realStatus} 
+                       caughtUpDate={caughtUpDate}
+                       onStatusChange={(id, status) => onStatusChange(id, status, routineShift)} 
+                     />
+                   );
+                 })}
+               </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

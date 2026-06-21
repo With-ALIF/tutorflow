@@ -109,7 +109,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                   </>
                 ) : (
                   <div className="flex-1 overflow-y-auto">
-                    <CalendarView records={studentHistory} />
+                    <CalendarView records={studentHistory} students={students} fallbackStudent={selectedStudent} />
                   </div>
                 )
               ) : (

@@ -1,20 +1,57 @@
 import React from "react";
 import { Clock, Play, Layers, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import { Routine } from "../types/routine.types";
 import { useRoutine } from "../hooks/useRoutine";
 import { useStudents } from "../../students/hooks/useStudents";
+import { fetchDailyAttendance } from "../../attendance/services/attendanceService";
 import { cn } from "../../../lib/utils";
 
 export const UpcomingClasses: React.FC = () => {
   const { routines, loading: routineLoading } = useRoutine();
   const { students, loading: studentsLoading } = useStudents();
   const [activeTab, setActiveTab] = React.useState<'today' | 'tomorrow'>('today');
+  const [takenSessions, setTakenSessions] = React.useState<Set<string>>(new Set());
+  const [loadingTaken, setLoadingTaken] = React.useState(false);
 
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   
   const getTodayDay = () => {
     return days[new Date().getDay()];
   };
+
+  const todayDate = format(new Date(), 'yyyy-MM-dd');
+
+  React.useEffect(() => {
+    const checkTaken = async () => {
+      setLoadingTaken(true);
+      try {
+        const records = await fetchDailyAttendance(todayDate);
+        // records is Record<string, Status> where key is studentId_shift
+        const taken = new Set<string>();
+        
+        // We need to know which (Batch, Shift) is taken.
+        // But records only has studentId_shift. 
+        // We can map studentId to their batch.
+        Object.keys(records).forEach(key => {
+          const [studentId, shift] = key.split('_');
+          const student = students.find(s => s.id === studentId);
+          if (student && student.batch) {
+            taken.add(`${student.batch}_${shift}`);
+          }
+        });
+        setTakenSessions(taken);
+      } catch (error) {
+        console.error("Error fetching taken status:", error);
+      } finally {
+        setLoadingTaken(false);
+      }
+    };
+
+    if (students.length > 0) {
+      checkTaken();
+    }
+  }, [students, todayDate]);
 
   const getTomorrowDay = () => {
     const tomorrowIndex = (new Date().getDay() + 1) % 7;
@@ -25,11 +62,11 @@ export const UpcomingClasses: React.FC = () => {
   const tomorrow = getTomorrowDay();
 
   const todayClasses = routines
-    .filter(r => r.day === today)
+    .filter(r => r.day.toLowerCase() === today.toLowerCase())
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   const tomorrowClasses = routines
-    .filter(r => r.day === tomorrow)
+    .filter(r => r.day.toLowerCase() === tomorrow.toLowerCase())
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   const currentClasses = activeTab === 'today' ? todayClasses : tomorrowClasses;
@@ -116,6 +153,15 @@ export const UpcomingClasses: React.FC = () => {
                       </span>
                     )}
                   </div>
+                  
+                  {activeTab === 'today' && takenSessions.has(`${routine.batchName}_${routine.shift || 'Morning'}`) && (
+                    <div className="mt-1">
+                      <span className="text-[9px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-500/20 uppercase tracking-widest">
+                        Already Taken
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-1 mt-2">
                     {getStudentsByBatch(routine.batchName).map(s => (
                       <span key={s.id} className="text-[8px] px-1 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded border border-slate-100 dark:border-slate-700 font-bold uppercase">

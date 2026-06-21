@@ -1,7 +1,7 @@
 export interface Stats {
   totalStudents: number;
+  totalBatches: number;
   monthlyIncome: number;
-  monthlyExpenses: number;
   dueFees: number;
   recentActivity: any[];
   upcomingFees: any[];

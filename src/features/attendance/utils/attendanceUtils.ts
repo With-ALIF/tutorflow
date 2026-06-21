@@ -5,6 +5,9 @@ export const getAttendanceCount = (
   studentId: string,
   status: 'present' | 'absent'
 ): number => {
+  if (status === 'present') {
+    return attendance.filter(a => a.student_id === studentId && (a.status === 'present' || a.status === 'caught_up')).length;
+  }
   return attendance.filter(a => a.student_id === studentId && a.status === status).length;
 };
 

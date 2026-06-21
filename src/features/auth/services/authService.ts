@@ -1,20 +1,19 @@
-import { 
-  auth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword
-} from "../../../firebase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { supabase } from "../../../lib/supabase";
 
 export const loginWithEmail = async (email: string, password: string) => {
-  return await signInWithEmailAndPassword(auth, email, password);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) throw error;
+  return data;
 };
 
 export const signUpWithEmail = async (email: string, password: string) => {
-  return await createUserWithEmailAndPassword(auth, email, password);
-};
-
-export const loginWithGoogle = async () => {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-  return await signInWithPopup(auth, provider);
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+  if (error) throw error;
+  return data;
 };

@@ -5,7 +5,6 @@ import { motion } from "motion/react";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
 import { LoginHeader } from "@/src/features/auth/components/LoginHeader";
 import { LoginForm } from "@/src/features/auth/components/LoginForm";
-import { GoogleButton } from "@/src/features/auth/components/GoogleButton";
 
 export const Login: React.FC = () => {
   const {
@@ -16,7 +15,6 @@ export const Login: React.FC = () => {
     isSignUp,
     setIsSignUp,
     error,
-    handleGoogleLogin,
     handleEmailAuth,
     loading
   } = useAuth();
@@ -56,14 +54,6 @@ export const Login: React.FC = () => {
             onSubmit={handleEmailAuth}
             loading={loading}
           />
-          
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-slate-400 text-sm">OR</span>
-            <div className="h-px flex-1 bg-slate-200" />
-          </div>
-
-          <GoogleButton onClick={handleGoogleLogin} loading={loading} />
           
           <button
             type="button"

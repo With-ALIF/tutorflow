@@ -2,8 +2,7 @@
 /// <reference types="vite-plugin-pwa/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_SUPABASE_URL: string
-  readonly VITE_SUPABASE_ANON_KEY: string
+  // Add any specific custom env variables here if needed
 }
 
 interface ImportMeta {

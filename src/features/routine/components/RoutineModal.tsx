@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Clock, BookOpen, Layers } from "lucide-react";
 import { motion } from "motion/react";
 import { Routine, DayOfWeek } from "../types/routine.types";
-import { studentService } from "../../students/services/studentService";
+import { batchService } from "../../batches/services/batchService";
 
 interface RoutineModalProps {
   onClose: () => void;
@@ -10,28 +10,29 @@ interface RoutineModalProps {
   routine?: Routine | null;
 }
 
-const days: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const days: DayOfWeek[] = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 export const RoutineModal: React.FC<RoutineModalProps> = ({ onClose, onSave, routine }) => {
-  const [batches, setBatches] = useState<string[]>([]);
+  const [availableBatchNames, setAvailableBatchNames] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     batchName: routine?.batchName || "",
-    day: routine?.day || "Monday",
+    day: routine?.day || "Saturday",
     startTime: routine?.startTime || "10:00",
     endTime: routine?.endTime || "11:30",
     subject: routine?.subject || "",
     room: routine?.room || "",
-    color: routine?.color || "#4f46e5"
+    color: routine?.color || "#4f46e5",
+    shift: routine?.shift || "Morning"
   });
 
   useEffect(() => {
     const fetchBatches = async () => {
       try {
-        const students = await studentService.fetchStudents();
-        const uniqueBatches = Array.from(new Set(students.map(s => s.batch).filter(Boolean)));
-        setBatches(uniqueBatches as string[]);
+        const batches = await batchService.fetchBatches();
+        const batchNames = batches.map(b => b.name).filter(Boolean);
+        setAvailableBatchNames(batchNames);
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching batches for modal:", error);
       }
     };
     fetchBatches();
@@ -70,8 +71,8 @@ export const RoutineModal: React.FC<RoutineModalProps> = ({ onClose, onSave, rou
                 onChange={e => setFormData({ ...formData, batchName: e.target.value })}
               >
                 <option value="" disabled>Select Batch</option>
-                {batches.map(b => <option key={b} value={b}>{b}</option>)}
-                {batches.length === 0 && <option value="" disabled>No batches found</option>}
+                {availableBatchNames.map(b => <option key={b} value={b}>{b}</option>)}
+                {availableBatchNames.length === 0 && <option value="" disabled>No batches found</option>}
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,6 +133,34 @@ export const RoutineModal: React.FC<RoutineModalProps> = ({ onClose, onSave, rou
                   onChange={e => setFormData({ ...formData, endTime: e.target.value })}
                 />
               </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Shift (শিফট)</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, shift: "Morning" })}
+                className={`py-3.5 px-4 rounded-2xl font-bold text-sm border-2 transition-all flex items-center justify-center gap-2 ${
+                  formData.shift === "Morning"
+                    ? "bg-amber-50 dark:bg-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500 shadow-lg shadow-amber-500/10"
+                    : "bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-300"
+                }`}
+              >
+                <span>☀️ Morning</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, shift: "Evening" })}
+                className={`py-3.5 px-4 rounded-2xl font-bold text-sm border-2 transition-all flex items-center justify-center gap-2 ${
+                  formData.shift === "Evening"
+                    ? "bg-indigo-50 dark:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 border-indigo-500 shadow-lg shadow-indigo-500/10"
+                    : "bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-300"
+                }`}
+              >
+                <span>⛅ Evening</span>
+              </button>
             </div>
           </div>
 

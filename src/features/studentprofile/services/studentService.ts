@@ -1,39 +1,40 @@
-import { db, auth } from "../../../firebase";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { supabase } from "../../../lib/supabase";
 import { Student } from "../../../types/student";
 import { AttendanceRecord } from "../../../types/attendance";
 import { FeeRecord } from "../../../types/fee";
-import { Expense } from "../../expenses/types/expense.types";
 
 export const fetchStudentData = async (id: string) => {
-  if (!id || !auth.currentUser) throw new Error("User not authenticated");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!id || !user) throw new Error("User not authenticated");
 
-  const studentDoc = await getDoc(doc(db, "students", id));
-  if (!studentDoc.exists() || studentDoc.data().userId !== auth.currentUser.uid) {
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (studentError || !student) {
     return null;
   }
-  const student = { id: studentDoc.id, ...studentDoc.data() } as Student;
 
-  const attendanceQuery = query(collection(db, "attendance"), where("userId", "==", auth.currentUser.uid));
-  const attendanceSnapshot = await getDocs(attendanceQuery);
-  const attendance = attendanceSnapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord))
-    .filter((a) => a.student_id === id)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const { data: attendance, error: attendanceError } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("student_id", id)
+    .order("date", { ascending: false });
 
-  const feesQuery = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
-  const feesSnapshot = await getDocs(feesQuery);
-  const fees = feesSnapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() } as FeeRecord))
-    .filter((f) => f.student_id === id)
-    .sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime());
+  if (attendanceError) throw attendanceError;
 
-  const expensesQuery = query(collection(db, "expenses"), where("userId", "==", auth.currentUser.uid));
-  const expensesSnapshot = await getDocs(expensesQuery);
-  const expenses = expensesSnapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() } as Expense))
-    .filter((e) => e.studentId === id)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const { data: fees, error: feesError } = await supabase
+    .from("fees")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("student_id", id)
+    .order("payment_date", { ascending: false });
 
-  return { student, attendance, fees, expenses };
+  if (feesError) throw feesError;
+  
+  return { student, attendance, fees };
 };

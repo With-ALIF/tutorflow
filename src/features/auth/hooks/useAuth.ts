@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginWithEmail, signUpWithEmail, loginWithGoogle } from "../services/authService";
+import { loginWithEmail, signUpWithEmail } from "../services/authService";
 
 export const useAuth = () => {
   const [email, setEmail] = useState("");
@@ -28,19 +28,6 @@ export const useAuth = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      await loginWithGoogle();
-      navigate("/");
-    } catch (err: any) {
-      setError(err.message || "Google login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return {
     email,
     setEmail,
@@ -49,7 +36,6 @@ export const useAuth = () => {
     isSignUp,
     setIsSignUp,
     error,
-    handleGoogleLogin,
     handleEmailAuth,
     loading
   };

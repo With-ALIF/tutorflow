@@ -4,7 +4,6 @@ import { ChevronLeft, Download } from "lucide-react";
 import { Student } from "../../../types/student";
 import { AttendanceRecord } from "../../../types/attendance";
 import { FeeRecord } from "../../../types/fee";
-import { Expense } from "../../expenses/types/expense.types";
 
 interface ProfileHeaderProps {
   student: Student;

@@ -7,6 +7,7 @@ import { BatchModal } from "./components/BatchModal";
 import { AddStudentModal } from "../students/components/AddStudentModal";
 import { Batch } from "./types/batch.types";
 import { motion, AnimatePresence } from "motion/react";
+import { ConfirmationModal } from "../../components/ConfirmationModal";
 
 export default function BatchPage() {
   const { batches, loading: batchesLoading, addBatch, updateBatch, deleteBatch } = useBatches();
@@ -16,6 +17,7 @@ export default function BatchPage() {
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [selectedBatchForStudent, setSelectedBatchForStudent] = useState<string>("");
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+  const [deleteBatchId, setDeleteBatchId] = useState<string | null>(null);
 
   const filteredBatches = batches.filter(batch => 
     batch.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -79,7 +81,7 @@ export default function BatchPage() {
                 batch={batch} 
                 students={students}
                 onEdit={(b) => { setEditingBatch(b); setIsModalOpen(true); }}
-                onDelete={(id) => confirm("Are you sure you want to delete this batch?") && deleteBatch(id)}
+                onDelete={(id) => setDeleteBatchId(id)}
                 onAddStudent={(batchName) => {
                   setSelectedBatchForStudent(batchName);
                   setIsAddStudentOpen(true);
@@ -117,6 +119,18 @@ export default function BatchPage() {
         onClose={() => setIsAddStudentOpen(false)}
         onSave={addStudent}
         initialBatch={selectedBatchForStudent}
+      />
+
+      <ConfirmationModal
+        isOpen={!!deleteBatchId}
+        onClose={() => setDeleteBatchId(null)}
+        onConfirm={() => {
+          if (deleteBatchId) {
+            deleteBatch(deleteBatchId);
+          }
+        }}
+        title="Delete Batch"
+        description="Are you sure you want to delete this batch? All schedule and student mappings for this batch might be affected. This action cannot be undone."
       />
     </div>
   );

@@ -2,7 +2,7 @@ export type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Frida
 
 export interface Routine {
   id: string;
-  userId: string;
+  user_id: string;
   batchName: string;
   day: DayOfWeek;
   startTime: string; // HH:MM
@@ -10,6 +10,7 @@ export interface Routine {
   subject?: string;
   room?: string;
   color?: string;
+  shift?: "Morning" | "Evening";
 }
 
-export type NewRoutine = Omit<Routine, "id" | "userId">;
+export type NewRoutine = Omit<Routine, "id" | "user_id">;

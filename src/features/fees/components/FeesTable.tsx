@@ -1,5 +1,5 @@
-import React from "react";
-import { Search, Filter, Download, CreditCard, ChevronUp, ChevronDown, Calendar, DollarSign, Clock } from "lucide-react";
+import React, { useState } from "react";
+import { Search, Filter, Download, CreditCard, ChevronUp, ChevronDown, Calendar, DollarSign, Clock, Trash2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { FeeRecord } from "../types/fee.types";
 
@@ -8,6 +8,7 @@ interface FeesTableProps {
   onDownloadPDF: () => void;
   onMarkAsPaid: (id: string) => void;
   onMarkAsUnpaid: (id: string) => void;
+  onDeleteFee: (id: string) => void;
   onSort: (key: keyof FeeRecord | 'amount') => void;
   sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
   searchTerm: string;
@@ -19,11 +20,14 @@ export const FeesTable: React.FC<FeesTableProps> = ({
   onDownloadPDF, 
   onMarkAsPaid, 
   onMarkAsUnpaid,
+  onDeleteFee,
   onSort,
   sortConfig,
   searchTerm,
   onSearchChange
 }) => {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   return (
     <div className="space-y-6">
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -56,25 +60,36 @@ export const FeesTable: React.FC<FeesTableProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {fees.map((fee) => (
           <div key={fee.id} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/60 dark:border-slate-700 shadow-sm p-6 flex flex-col gap-4 hover:border-indigo-500/30 transition-all hover:shadow-lg hover:shadow-indigo-500/5 group">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 shrink-0 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
-                {fee.students?.photo ? (
-                  <img src={fee.students.photo} alt={fee.students.name} className="w-full h-full object-cover rounded-2xl" />
-                ) : (
-                  fee.students?.name.charAt(0)
-                )}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-12 h-12 shrink-0 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
+                  {fee.students?.photo ? (
+                    <img src={fee.students.photo} alt={fee.students.name} className="w-full h-full object-cover rounded-2xl" />
+                  ) : (
+                    fee.students?.name.charAt(0)
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors truncate">{fee.students?.name}</h3>
+                  <span className={cn(
+                    "inline-flex items-center px-2 py-0.5 mt-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider",
+                    fee.status === 'paid' ? "bg-indigo-100 text-indigo-700" : 
+                    fee.status === 'unpaid' ? "bg-red-100 text-red-700" :
+                    "bg-orange-100 text-orange-700"
+                  )}>
+                    {fee.status}
+                  </span>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors truncate">{fee.students?.name}</h3>
-                <span className={cn(
-                  "inline-flex items-center px-2 py-0.5 mt-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider",
-                  fee.status === 'paid' ? "bg-indigo-100 text-indigo-700" : 
-                  fee.status === 'unpaid' ? "bg-red-100 text-red-700" :
-                  "bg-orange-100 text-orange-700"
-                )}>
-                  {fee.status}
-                </span>
-              </div>
+
+              <button 
+                type="button"
+                onClick={() => setConfirmDeleteId(fee.id)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors shrink-0"
+                title="Delete payment record"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-4 rounded-xl">
@@ -103,21 +118,42 @@ export const FeesTable: React.FC<FeesTableProps> = ({
               </div>
             </div>
 
-            {fee.status === 'due' && (
-              <div className="flex items-center gap-2 mt-auto">
+            {confirmDeleteId === fee.id ? (
+              <div className="flex items-center gap-2 mt-auto p-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-2xl">
+                <span className="text-xs font-bold text-red-700 dark:text-red-400 flex-1 ml-1">Confirm delete?</span>
                 <button 
-                  onClick={() => onMarkAsPaid(fee.id)}
-                  className="flex-1 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl text-sm font-bold transition-all active:scale-95"
+                  onClick={() => {
+                    onDeleteFee(fee.id);
+                    setConfirmDeleteId(null);
+                  }}
+                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all active:scale-95"
                 >
-                  Mark Paid
+                  Yes, Delete
                 </button>
                 <button 
-                  onClick={() => onMarkAsUnpaid(fee.id)}
-                  className="flex-1 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl text-sm font-bold transition-all active:scale-95"
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-all active:scale-95"
                 >
-                  Unpaid
+                  Cancel
                 </button>
               </div>
+            ) : (
+              fee.status === 'due' && (
+                <div className="flex items-center gap-2 mt-auto">
+                  <button 
+                    onClick={() => onMarkAsPaid(fee.id)}
+                    className="flex-1 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl text-sm font-bold transition-all active:scale-95"
+                  >
+                    Mark Paid
+                  </button>
+                  <button 
+                    onClick={() => onMarkAsUnpaid(fee.id)}
+                    className="flex-1 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl text-sm font-bold transition-all active:scale-95"
+                  >
+                    Unpaid
+                  </button>
+                </div>
+              )
             )}
           </div>
         ))}

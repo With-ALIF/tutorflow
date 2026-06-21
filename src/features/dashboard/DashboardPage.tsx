@@ -10,8 +10,8 @@ export default function DashboardPage() {
 
   if (loading) return <div className="animate-pulse space-y-8">
     <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl w-full" />
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {[1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-[2.5rem]" />)}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[1, 2, 3].map(i => <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-[2.5rem]" />)}
     </div>
   </div>;
 

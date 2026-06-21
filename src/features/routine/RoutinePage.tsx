@@ -6,12 +6,14 @@ import { useRoutine } from "./hooks/useRoutine";
 import { useStudents } from "../students/hooks/useStudents";
 import { Routine } from "./types/routine.types";
 import { motion, AnimatePresence } from "motion/react";
+import { ConfirmationModal } from "../../components/ConfirmationModal";
 
 export const RoutinePage: React.FC = () => {
   const { routines, loading: routineLoading, addRoutine, updateRoutine, deleteRoutine } = useRoutine();
   const { students, loading: studentsLoading } = useStudents();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
+  const [deleteRoutineId, setDeleteRoutineId] = useState<string | null>(null);
 
   const handleSave = async (data: any) => {
     if (editingRoutine) {
@@ -49,12 +51,12 @@ export const RoutinePage: React.FC = () => {
         </button>
       </header>
 
-      <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-[2.5rem] p-6 lg:p-10 border border-white dark:border-slate-800 shadow-inner">
+      <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-3xl sm:rounded-[2.5rem] p-3 sm:p-6 lg:p-10 border border-white dark:border-slate-800 shadow-inner">
         <RoutineCalendar 
           routines={routines} 
           students={students}
           onEdit={(r) => { setEditingRoutine(r); setIsModalOpen(true); }} 
-          onDelete={(id) => confirm("Are you sure you want to delete this schedule?") && deleteRoutine(id)} 
+          onDelete={(id) => setDeleteRoutineId(id)} 
         />
       </div>
 
@@ -67,6 +69,18 @@ export const RoutinePage: React.FC = () => {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={!!deleteRoutineId}
+        onClose={() => setDeleteRoutineId(null)}
+        onConfirm={() => {
+          if (deleteRoutineId) {
+            deleteRoutine(deleteRoutineId);
+          }
+        }}
+        title="Delete Schedule"
+        description="Are you sure you want to delete this schedule? This class time indicator will be removed from your routine. This action cannot be undone."
+      />
     </div>
   );
 };

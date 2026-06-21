@@ -33,7 +33,7 @@ export const BatchCard: React.FC<BatchCardProps> = ({ batch, students, onEdit, o
             </div>
           </div>
           
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1">
             <button 
               onClick={() => onEdit(batch)}
               className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-500 rounded-xl transition-all"

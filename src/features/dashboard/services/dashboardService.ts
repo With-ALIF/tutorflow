@@ -1,72 +1,59 @@
-import { db, auth } from "../../../firebase";
-import { collection, getDocs, query, where, limit, orderBy } from "firebase/firestore";
+import { format } from "date-fns";
+import { supabase } from "../../../lib/supabase";
 import { Student } from "../../../types/student";
 import { FeeRecord } from "../../../types/fee";
 import { AttendanceRecord } from "../../../types/attendance";
 import { Stats } from "../types/dashboard.types";
 
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-  }
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
-
 export const fetchDashboardData = async (): Promise<Stats> => {
-  if (!auth.currentUser) throw new Error("User not authenticated");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      totalStudents: 0,
+      totalBatches: 0,
+      monthlyIncome: 0,
+      dueFees: 0,
+      recentActivity: [],
+      upcomingFees: []
+    };
+  }
   
   try {
-    const studentsQuery = query(collection(db, "students"), where("userId", "==", auth.currentUser.uid));
-    const studentsSnapshot = await getDocs(studentsQuery);
-    const totalStudents = studentsSnapshot.size;
+    const { data: students, error: studentsError } = await supabase
+      .from("students")
+      .select("*")
+      .eq("user_id", user.id);
+      
+    if (studentsError) throw studentsError;
+    const totalStudents = students.length;
+
+    const { data: batches, error: batchesError } = await supabase
+      .from("batches")
+      .select("id")
+      .eq("user_id", user.id);
+    
+    if (batchesError) throw batchesError;
+    const totalBatches = batches.length;
     const studentsMap = new Map<string, string>();
-    studentsSnapshot.docs.forEach(doc => {
-      studentsMap.set(doc.id, doc.data().name);
+    students.forEach(student => {
+      studentsMap.set(student.id, student.name);
     });
     const studentIds = new Set(studentsMap.keys());
 
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const feesQuery = query(collection(db, "fees"), where("userId", "==", auth.currentUser.uid));
-    const expensesQuery = query(collection(db, "expenses"), where("userId", "==", auth.currentUser.uid));
+    const currentMonth = format(new Date(), 'yyyy-MM');
     
-    const [feesSnapshot, expensesSnapshot] = await Promise.all([
-      getDocs(feesQuery),
-      getDocs(expensesQuery)
-    ]);
+    const { data: fees, error: feesError } = await supabase
+      .from("fees")
+      .select("*")
+      .eq("user_id", user.id);
+    
+    if (feesError) throw feesError;
     
     let monthlyIncome = 0;
     let totalDueBalance = 0;
-    let monthlyExpenses = 0;
     const upcomingFees: any[] = [];
 
-    feesSnapshot.forEach(doc => {
-      const data = doc.data() as FeeRecord;
+    fees.forEach(data => {
       if (data.fee_month !== currentMonth) return;
       if (!studentIds.has(data.student_id)) return;
       if (data.status === 'paid') {
@@ -74,47 +61,47 @@ export const fetchDashboardData = async (): Promise<Stats> => {
       } else if (data.status === 'due' || data.status === 'pending') {
         totalDueBalance += data.amount;
         upcomingFees.push({ 
-          id: doc.id, 
-          studentName: studentsMap.get(data.student_id) || 'Unknown Student',
-          ...data 
+          ...data,
+          studentName: studentsMap.get(data.student_id) || 'Unknown Student'
         });
       }
     });
 
-    expensesSnapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.date && data.date.startsWith(currentMonth)) {
-        monthlyExpenses += data.amount || 0;
-      }
-    });
+    const { data: attendanceData, error: attendanceError } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
 
-    const recentActivityQuery = query(
-      collection(db, "attendance"), 
-      where("userId", "==", auth.currentUser.uid),
-      orderBy("created_at", "desc"),
-      limit(5)
-    );
-    const recentActivitySnapshot = await getDocs(recentActivityQuery);
-    const recentActivity = recentActivitySnapshot.docs
-      .map(doc => {
-        const data = doc.data() as AttendanceRecord;
+    if (attendanceError) throw attendanceError;
+
+    const recentActivity = attendanceData
+      .map(data => {
         return {
-          id: doc.id,
-          studentName: studentsMap.get(data.student_id) || 'Unknown Student',
-          ...data
+          ...data,
+          studentName: studentsMap.get(data.student_id) || 'Unknown Student'
         };
-      });
+      })
+      .sort((a, b) => {
+        // Primary Sort: Date Descending
+        const dateCompare = b.date.localeCompare(a.date);
+        if (dateCompare !== 0) return dateCompare;
+        // Secondary Sort: Created At Descending (most recently saved sessions of that date)
+        return b.created_at.localeCompare(a.created_at);
+      })
+      .slice(0, 7); // Take top 7 sorted records
 
     return {
       totalStudents,
+      totalBatches,
       monthlyIncome,
-      monthlyExpenses,
       dueFees: totalDueBalance,
       recentActivity,
       upcomingFees: upcomingFees.slice(0, 5)
     };
   } catch (error) {
-    handleFirestoreError(error, OperationType.GET, "dashboard");
+    console.error('Dashboard Error: ', error);
     throw error;
   }
 };

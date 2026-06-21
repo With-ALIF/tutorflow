@@ -9,27 +9,27 @@ import { ProfileRoutine } from "./components/ProfileRoutine";
 import { AttendanceProgress } from "./components/AttendanceProgress";
 import { AttendanceList } from "./components/AttendanceList";
 import { PaymentList } from "./components/PaymentList";
-import { ExpenseList } from "./components/ExpenseList";
 import { useRoutine } from "../routine/hooks/useRoutine";
 
 export default function StudentProfile() {
   const { id } = useParams();
-  const { student, attendance, fees, expenses, loading: profileLoading } = useStudentProfile(id);
+  const { student, attendance, fees, loading: profileLoading } = useStudentProfile(id);
   const { routines, loading: routineLoading } = useRoutine();
-  const { downloadPDF, downloadAttendancePDF } = usePDF();
+  const { downloadPDF, downloadAttendancePDF, downloadRunningMonthReportPDF } = usePDF();
 
   const loading = profileLoading || routineLoading;
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading profile...</div>;
   if (!student) return <div className="p-8 text-center text-red-500">Student not found.</div>;
 
-  const stats = calculateStats(attendance, student);
+  const presentsOnly = attendance.filter(a => a.status === 'present' || a.status === 'caught_up');
+  const stats = calculateStats(presentsOnly, student);
 
   return (
     <div className="space-y-4">
       <ProfileHeader 
         student={student} 
-        onDownloadFull={() => downloadPDF(student, attendance, fees, expenses)} 
+        onDownloadFull={() => downloadPDF(student, presentsOnly, fees)} 
       />
       <div className="space-y-4">
         <ProfileCard student={student} />
@@ -40,17 +40,17 @@ export default function StudentProfile() {
           <div className="space-y-4">
             <AttendanceProgress 
               {...stats} 
-              onDownload={() => downloadAttendancePDF(student, attendance)} 
+              onDownload={() => downloadAttendancePDF(student, presentsOnly)} 
+              onDownloadRunning={() => downloadRunningMonthReportPDF(student, presentsOnly, routines)}
             />
             <AttendanceList 
-              attendance={attendance} 
-              onDownload={() => downloadAttendancePDF(student, attendance)}
+              attendance={presentsOnly} 
+              onDownload={() => downloadAttendancePDF(student, presentsOnly)}
             />
           </div>
           
           <div className="space-y-4">
             <PaymentList fees={fees} />
-            <ExpenseList expenses={expenses} />
           </div>
         </div>
       </div>

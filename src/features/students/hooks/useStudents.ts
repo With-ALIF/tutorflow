@@ -2,6 +2,8 @@ import { useState, useEffect, useContext, useCallback } from "react";
 import { ToastContext } from "../../../context/ToastContext";
 import { studentService } from "../services/studentService";
 import { Student, NewStudent } from "../types/student.types";
+import { notifyStudentAdmission } from "../../../utils/telegramService";
+import { supabase } from "../../../lib/supabase";
 
 export const useStudents = () => {
   const { showToast } = useContext(ToastContext);
@@ -27,6 +29,22 @@ export const useStudents = () => {
       await studentService.addStudent(student);
       showToast("Student added successfully!");
       fetchStudents();
+
+      // Trigger Telegram Notification for Student Admission
+      try {
+        await notifyStudentAdmission({
+          name: student.name,
+          class: student.class,
+          batch: student.batch,
+          monthly_fee: student.monthly_fee,
+          join_date: student.join_date,
+          phone: student.phone,
+          subject: student.subject
+        });
+      } catch (notifyErr) {
+        console.error("Failed to send student admission Telegram notification:", notifyErr);
+      }
+
       return true;
     } catch (err) {
       console.error("Error adding student:", err);
@@ -62,7 +80,27 @@ export const useStudents = () => {
   };
 
   useEffect(() => {
-    fetchStudents();
+    let isActive = true;
+
+    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user && isActive) {
+        fetchStudents();
+      } else if (!session && isActive) {
+        setStudents([]);
+      }
+    });
+
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user && isActive) {
+        fetchStudents();
+      }
+    });
+
+    return () => {
+      isActive = false;
+      authListener.unsubscribe();
+    };
   }, [fetchStudents]);
 
   return { students, loading, addStudent, updateStudent, deleteStudent, fetchStudents };

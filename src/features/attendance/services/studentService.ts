@@ -1,10 +1,15 @@
-import { db, auth } from "../../../firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { supabase } from "../../../lib/supabase";
 import { Student } from "../types/attendance.types";
 
 export const fetchStudents = async (): Promise<Student[]> => {
-  if (!auth.currentUser) return [];
-  const q = query(collection(db, "students"), where("userId", "==", auth.currentUser.uid));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  
+  const { data, error } = await supabase
+    .from("students")
+    .select("*")
+    .eq("user_id", user.id);
+    
+  if (error) throw error;
+  return data as Student[];
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import { UserCheck, History, BarChart3 } from "lucide-react";
+import { UserCheck, History, BarChart3, CalendarDays } from "lucide-react";
 import { cn } from "../../../../lib/utils";
 import { ActiveTab } from "../../types/attendance.types";
 
@@ -12,7 +12,8 @@ export const AttendanceTabs: React.FC<AttendanceTabsProps> = ({ activeTab, setAc
   const tabs = [
     { id: 'mark', label: 'Mark Attendance', icon: UserCheck },
     { id: 'history', label: 'History', icon: History },
-    { id: 'report', label: 'Monthly Report', icon: BarChart3 },
+    { id: 'calendar', label: 'Monthly Calendar', icon: CalendarDays },
+    { id: 'report', label: 'Summary Report', icon: BarChart3 },
   ] as const;
 
   return (

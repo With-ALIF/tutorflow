@@ -1,7 +1,7 @@
 export interface FeeRecord {
   id: string;
   student_id: string;
-  userId: string;
+  user_id: string;
   amount: number;
   payment_date: string;
   fee_month: string;

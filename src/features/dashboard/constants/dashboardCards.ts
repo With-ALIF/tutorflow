@@ -1,9 +1,8 @@
-import { Users, CreditCard, Receipt, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Users, CreditCard, Clock } from "lucide-react";
 
 export const getDashboardCards = (stats: any) => {
   const income = stats?.monthlyIncome || 0;
-  const expenses = stats?.monthlyExpenses || 0;
-  const netProfit = income - expenses;
+  const dueFees = stats?.dueFees || 0;
 
   return [
     {
@@ -21,18 +20,11 @@ export const getDashboardCards = (stats: any) => {
       link: "/fees"
     },
     {
-      label: "Monthly Expenses",
-      value: `৳${expenses.toLocaleString()}`,
-      icon: TrendingDown,
+      label: "Due Fees",
+      value: `৳${dueFees.toLocaleString()}`,
+      icon: Clock,
       color: "from-amber-500 to-orange-600",
-      link: "/expenses"
-    },
-    {
-      label: "Net Profit",
-      value: `৳${netProfit.toLocaleString()}`,
-      icon: Wallet,
-      color: "from-purple-500 to-pink-600",
-      link: "/"
+      link: "/fees"
     }
   ];
 };

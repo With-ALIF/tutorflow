@@ -1,10 +1,10 @@
 export interface Batch {
   id: string;
-  userId: string;
+  user_id: string;
   name: string;
   description?: string;
   color?: string;
   created_at: string;
 }
 
-export type NewBatch = Omit<Batch, "id" | "userId" | "created_at">;
+export type NewBatch = Omit<Batch, "id" | "user_id" | "created_at">;

@@ -26,7 +26,8 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
     class_days: [],
     join_date: new Date().toISOString().split('T')[0],
     photo: "",
-    batch: initialBatch || ""
+    batch: initialBatch || "",
+    telegram_chat_id: ""
   });
 
   React.useEffect(() => {
@@ -142,15 +143,36 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Monthly Fee ($)</label>
-                    <input required type="number" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="0.00" value={newStudent.monthly_fee} onChange={e => setNewStudent({...newStudent, monthly_fee: Number(e.target.value)})} />
+                    <input 
+                      required 
+                      type="number" 
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                      placeholder="0" 
+                      value={newStudent.monthly_fee === 0 ? "" : newStudent.monthly_fee} 
+                      onChange={e => setNewStudent({...newStudent, monthly_fee: e.target.value === "" ? 0 : Number(e.target.value)})} 
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Lectures / Month</label>
-                    <input required type="number" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="12" value={newStudent.lectures_per_month} onChange={e => setNewStudent({...newStudent, lectures_per_month: Number(e.target.value)})} />
+                    <input 
+                      required 
+                      type="number" 
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                      placeholder="12" 
+                      value={newStudent.lectures_per_month === 0 ? "" : newStudent.lectures_per_month} 
+                      onChange={e => setNewStudent({...newStudent, lectures_per_month: e.target.value === "" ? 0 : Number(e.target.value)})} 
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Lectures / Week</label>
-                    <input required type="number" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="3" value={newStudent.lectures_per_week} onChange={e => setNewStudent({...newStudent, lectures_per_week: Number(e.target.value)})} />
+                    <input 
+                      required 
+                      type="number" 
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                      placeholder="3" 
+                      value={newStudent.lectures_per_week === 0 ? "" : newStudent.lectures_per_week} 
+                      onChange={e => setNewStudent({...newStudent, lectures_per_week: e.target.value === "" ? 0 : Number(e.target.value)})} 
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Class Days</label>
@@ -168,7 +190,12 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
-                  <input required type="tel" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="+1 (555) 000-0000" value={newStudent.phone} onChange={e => setNewStudent({...newStudent, phone: e.target.value})} />
+                  <input required type="tel" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="e.g. 01712000000" value={newStudent.phone} onChange={e => setNewStudent({...newStudent, phone: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Telegram Chat ID (Optional)</label>
+                  <input type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="e.g. 129384729" value={newStudent.telegram_chat_id || ""} onChange={e => setNewStudent({...newStudent, telegram_chat_id: e.target.value})} />
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">If set, student/parent will receive automated present/absent alerts.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Joining Date</label>
