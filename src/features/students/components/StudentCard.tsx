@@ -59,8 +59,12 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit, onDel
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
             <BookOpen className="w-3.5 h-3.5 text-slate-400" />
             <div className="flex flex-col">
-              <span className="text-xs font-bold dark:text-slate-300">Class {student.class}</span>
-              {student.batch && <span className="text-[9px] text-indigo-500 font-bold uppercase">{student.batch}</span>}
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                {student.class}
+              </span>
+              {student.batch && student.batch !== student.class && (
+                <span className="text-[9px] text-indigo-500 font-bold uppercase">{student.batch}</span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">

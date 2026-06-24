@@ -30,14 +30,13 @@ export const UpcomingClasses: React.FC = () => {
         // records is Record<string, Status> where key is studentId_shift
         const taken = new Set<string>();
         
-        // We need to know which (Batch, Shift) is taken.
-        // But records only has studentId_shift. 
-        // We can map studentId to their batch.
+        // We need to know which (Batch, Time) is taken.
         Object.keys(records).forEach(key => {
-          const [studentId, shift] = key.split('_');
+          const [studentId, time] = key.split('_');
           const student = students.find(s => s.id === studentId);
-          if (student && student.batch) {
-            taken.add(`${student.batch}_${shift}`);
+          if (student && (student.class || student.batch)) {
+            const className = student.class || student.batch;
+            taken.add(`${className}_${time}`);
           }
         });
         setTakenSessions(taken);
@@ -62,11 +61,17 @@ export const UpcomingClasses: React.FC = () => {
   const tomorrow = getTomorrowDay();
 
   const todayClasses = routines
-    .filter(r => r.day.toLowerCase() === today.toLowerCase())
+    .filter(r => 
+      r.day.toLowerCase() === today.toLowerCase() &&
+      students.some(s => (s.class === r.className || s.name === r.className) && s.status !== 'finished')
+    )
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   const tomorrowClasses = routines
-    .filter(r => r.day.toLowerCase() === tomorrow.toLowerCase())
+    .filter(r => 
+      r.day.toLowerCase() === tomorrow.toLowerCase() &&
+      students.some(s => (s.class === r.className || s.name === r.className) && s.status !== 'finished')
+    )
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   const currentClasses = activeTab === 'today' ? todayClasses : tomorrowClasses;
@@ -74,8 +79,8 @@ export const UpcomingClasses: React.FC = () => {
 
   const loading = routineLoading || studentsLoading;
 
-  const getStudentsByBatch = (batchName: string) => {
-    return students.filter(s => s.batch === batchName);
+  const getStudentsByClass = (className: string) => {
+    return students.filter(s => s.class === className);
   };
 
   if (loading) return <div className="h-48 flex items-center justify-center bg-white dark:bg-slate-800 rounded-3xl animate-pulse p-8">
@@ -96,7 +101,7 @@ export const UpcomingClasses: React.FC = () => {
                 onClick={() => setActiveTab('today')}
                 className={cn(
                   "text-[10px] font-bold uppercase tracking-widest transition-colors",
-                  activeTab === 'today' ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 hover:text-slate-600"
+                  activeTab === 'today' ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"
                 )}
               >
                 Today ({today})
@@ -105,7 +110,7 @@ export const UpcomingClasses: React.FC = () => {
                 onClick={() => setActiveTab('tomorrow')}
                 className={cn(
                   "text-[10px] font-bold uppercase tracking-widest transition-colors",
-                  activeTab === 'tomorrow' ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 hover:text-slate-600"
+                  activeTab === 'tomorrow' ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"
                 )}
               >
                 Tomorrow ({tomorrow})
@@ -127,7 +132,7 @@ export const UpcomingClasses: React.FC = () => {
           </div>
         ) : (
           currentClasses.map((routine) => (
-            <div key={routine.id} className="relative group p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-transparent hover:border-blue-500/20 transition-all">
+            <div key={routine.id} className="relative p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-transparent">
               <div className="flex items-center gap-4">
                 <div className="flex flex-col items-center justify-center px-3 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 min-w-[70px]">
                   <span className="text-xs font-black text-slate-900 dark:text-white">{routine.startTime}</span>
@@ -135,7 +140,7 @@ export const UpcomingClasses: React.FC = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-black text-slate-900 dark:text-white truncate uppercase">{routine.batchName}</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-white truncate uppercase">{routine.className}</span>
                     {routine.subject && (
                       <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 text-[8px] font-black uppercase rounded border border-blue-500/20 tracking-tighter">
                         {routine.subject}
@@ -147,14 +152,9 @@ export const UpcomingClasses: React.FC = () => {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       Till {routine.endTime}
                     </span>
-                    {routine.room && (
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                        • {routine.room}
-                      </span>
-                    )}
                   </div>
                   
-                  {activeTab === 'today' && takenSessions.has(`${routine.batchName}_${routine.shift || 'Morning'}`) && (
+                  {activeTab === 'today' && takenSessions.has(`${routine.className}_${routine.startTime}`) && (
                     <div className="mt-1">
                       <span className="text-[9px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-500/20 uppercase tracking-widest">
                         Already Taken
@@ -163,7 +163,7 @@ export const UpcomingClasses: React.FC = () => {
                   )}
 
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {getStudentsByBatch(routine.batchName).map(s => (
+                    {getStudentsByClass(routine.className).map(s => (
                       <span key={s.id} className="text-[8px] px-1 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded border border-slate-100 dark:border-slate-700 font-bold uppercase">
                         {s.name}
                       </span>
@@ -171,7 +171,7 @@ export const UpcomingClasses: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="w-1.5 h-8 rounded-full" style={{ backgroundColor: routine.color || '#3b82f6' }} />
+                <div className="w-1.5 h-8 rounded-full bg-indigo-500/20" />
               </div>
             </div>
           ))

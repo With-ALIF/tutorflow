@@ -17,6 +17,7 @@ interface PaymentModalProps {
   };
   setNewPayment: (payment: any) => void;
   onSubmit: (e: React.FormEvent) => void;
+  isEditing?: boolean;
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -25,7 +26,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   students,
   newPayment,
   setNewPayment,
-  onSubmit
+  onSubmit,
+  isEditing = false
 }) => {
   return (
     <AnimatePresence>
@@ -38,7 +40,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
           >
             <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Record Payment</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                {isEditing ? "Edit Payment Record" : "Record Payment"}
+              </h2>
               <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                 <Plus className="w-6 h-6 rotate-45" />
               </button>
@@ -61,9 +65,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     }}
                   >
                     <option value="">Choose a student...</option>
-                    {students.map(s => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.class})</option>
-                    ))}
+                    {students
+                      .filter(s => s.status !== 'finished' || s.id === newPayment.student_id)
+                      .map(s => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.class})</option>
+                      ))
+                    }
                   </select>
                 </div>
                 <div>
@@ -141,7 +148,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   type="submit"
                   className="flex-1 px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20"
                 >
-                  Save Payment
+                  {isEditing ? "Update Record" : "Save Payment"}
                 </button>
               </div>
             </form>

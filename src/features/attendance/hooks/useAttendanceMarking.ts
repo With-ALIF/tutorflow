@@ -62,12 +62,12 @@ export const useAttendanceMarking = (date: string) => {
     }
   }, [allStudents, routines, fetchPendingClasses]);
 
-  const addExtraBatch = useCallback((batchName: string) => {
+  const addExtraBatch = useCallback((className: string) => {
     setExtraBatches(prev => {
-      if (prev.includes(batchName)) return prev;
-      return [...prev, batchName];
+      if (prev.includes(className)) return prev;
+      return [...prev, className];
     });
-    showToast(`Loaded ${batchName} on the active list!`, "success");
+    showToast(`Loaded ${className} on the active list!`, "success");
     // Scroll to the panel after a short delay to allow rendering
     setTimeout(() => {
       const el = document.getElementById('attendance-table-container');
@@ -76,39 +76,91 @@ export const useAttendanceMarking = (date: string) => {
   }, [showToast]);
 
   const sessions = useMemo(() => {
-    // 1. Start with all routinely scheduled classes for the day
-    const sessionList = activeRoutines.map(r => ({ ...r, type: 'scheduled' as const }));
+    // 1. Start with all routinely scheduled classes for the day that have active students
+    // We filter activeRoutines to only include those where at least one active student exists
+    const sessionList = activeRoutines
+      .filter(r => allStudents.some(s => s.class === r.className || s.name === r.className))
+      .map(r => ({ ...r, type: 'scheduled' as const }));
+    
+    // Track routine-covered students to prevent extra session duplicates
+    const coveredMap = new Map<string, Set<string>>();
+    sessionList.forEach(session => {
+      const routineTime = session.startTime || '10:00';
+      const batchStudents = allStudents.filter(s => s.class === session.className || s.name === session.className);
+      batchStudents.forEach(s => {
+        if (!coveredMap.has(s.id)) coveredMap.set(s.id, new Set());
+        coveredMap.get(s.id)?.add(routineTime);
+      });
+    });
     
     // 2. Identify which batches are already covered by the scheduled list
-    const routineBatchNames = new Set(activeRoutines.map(r => r.batchName));
+    const routineClassNames = new Set(sessionList.map(r => r.className));
     
     // 3. Add extra batches (manually added or historically marked) that aren't in today's routine
-    const extraBatchNames = new Set(extraBatches);
+    const extraClassNames = new Set(extraBatches);
     const markedStudentIds = new Set(Object.keys(records).map(k => k.split('_')[0]));
-    const markedBatches = new Set(
-      allStudents
-        .filter(s => markedStudentIds.has(s.id))
-        .map(s => s.batch || "")
-        .filter(Boolean)
-    );
+    
+    // Improved marked batches logic: prioritize routine coverage
+    const markedBatches = new Set<string>();
+    allStudents.forEach(s => {
+      // If student is already covered by a routine today, we ignore their existing records
+      // so they don't trigger an redundant "Extra" session for the same day.
+      if (coveredMap.has(s.id)) return;
+
+      if (markedStudentIds.has(s.id)) {
+        // Only if they have a record but are NOT in any routine today
+        const names = [s.class, s.name].filter(Boolean) as string[];
+        names.forEach(n => {
+          if (!routineClassNames.has(n)) markedBatches.add(n);
+        });
+      }
+    });
 
     const nonRoutineBatches = Array.from(new Set([
-      ...Array.from(extraBatchNames),
+      ...Array.from(extraClassNames),
       ...Array.from(markedBatches)
-    ])).filter(name => !routineBatchNames.has(name));
+    ])).filter(name => !routineClassNames.has(name));
 
     // 4. Create "extra" session objects for those non-routine batches
-    nonRoutineBatches.forEach(batchName => {
-      sessionList.push({
-        id: `extra_${batchName}`,
-        batchName,
-        subject: "Extra/Catch-up",
-        startTime: "Manual",
-        endTime: "-",
-        day: "Any",
-        shift: 'Morning' as const,
-        color: "#64748b",
-        type: 'extra' as const
+    nonRoutineBatches.forEach(className => {
+      // Find all students for this batch
+      const allBatchStudents = allStudents.filter(s => s.class === className || s.name === className);
+      
+      const foundTimes = new Set<string>();
+      
+      allBatchStudents.forEach(s => {
+        // Look for any keys containing times, excluding CaughtUp
+        Object.keys(records).forEach(k => {
+          if (k.startsWith(`${s.id}_`)) {
+            const timePart = k.split('_')[1];
+            if (timePart && timePart !== 'CaughtUp') {
+              foundTimes.add(timePart);
+            }
+          }
+        });
+      });
+      
+      // If none found (e.g. manually added via select), default to 10:00
+      if (foundTimes.size === 0) {
+        foundTimes.add('10:00');
+      }
+      
+      foundTimes.forEach(time => {
+        // Only include students NOT covered by a routine for this time
+        const batchStudents = allBatchStudents.filter(s => !coveredMap.get(s.id)?.has(time));
+        
+        if (batchStudents.length > 0) {
+          sessionList.push({
+            id: `extra_${className}_${time}`,
+            className,
+            subject: "Extra/Catch-up",
+            startTime: time,
+            endTime: "-",
+            day: "Any",
+            shift: "Morning",
+            type: 'extra' as const
+          });
+        }
       });
     });
 
@@ -116,9 +168,9 @@ export const useAttendanceMarking = (date: string) => {
   }, [activeRoutines, extraBatches, records, allStudents]);
 
   const students = useMemo(() => {
-    const displayedBatchNames = new Set(sessions.map(s => s.batchName));
+    const displayedClassNames = new Set(sessions.map(s => s.className));
     return allStudents.filter(s => {
-      if (!s.batch || !displayedBatchNames.has(s.batch)) return false;
+      if (!displayedClassNames.has(s.class) && !displayedClassNames.has(s.name)) return false;
       // Do not show students who joined after the currently selected date in the marking panel
       const joinDateOnly = s.join_date ? s.join_date.split('T')[0] : "";
       if (joinDateOnly && joinDateOnly > date) return false;
@@ -127,18 +179,29 @@ export const useAttendanceMarking = (date: string) => {
   }, [allStudents, sessions, date]);
 
   const filteredPendingClasses = useMemo(() => {
-    const activeBatchNames = new Set(sessions.map(s => s.batchName));
-    return pendingClasses.filter(pc => !activeBatchNames.has(pc.batchName));
+    const activeClassNames = new Set(sessions.map(s => s.className));
+    return pendingClasses.filter(pc => !activeClassNames.has(pc.className));
   }, [pendingClasses, sessions]);
 
-  const handleStatusChange = useCallback((studentId: string, status: AttendanceStatus, shift: string = 'Morning') => {
+  const handleStatusChange = useCallback((studentId: string, status: AttendanceStatus, time: string = '10:00') => {
     setRecords(prev => {
       const newRecords = { ...prev };
       if (status === 'cleared') {
-        const activeKeys = Object.keys(newRecords).filter(k => k.startsWith(`${studentId}_`) && k.endsWith(shift));
-        activeKeys.forEach(k => { newRecords[k] = 'cleared'; });
+        // Clear regular session records for this time
+        const regularKey = `${studentId}_${time}`;
+        if (newRecords[regularKey]) {
+          newRecords[regularKey] = 'cleared';
+        }
+        
+        // Also clear any caught-up records for this student on this date
+        // Since we don't know the original date easily here, we clear any key that matches the pattern
+        Object.keys(newRecords).forEach(k => {
+          if (k.startsWith(`${studentId}_CaughtUp_`)) {
+            newRecords[k] = 'cleared';
+          }
+        });
       } else {
-        newRecords[`${studentId}_${shift}`] = status;
+        newRecords[`${studentId}_${time}`] = status;
       }
       return newRecords;
     });
@@ -148,15 +211,16 @@ export const useAttendanceMarking = (date: string) => {
     setRecords(initialRecords);
   }, [initialRecords]);
 
-  const handleSave = async (currentShift: 'Morning' | 'Evening') => {
+  const handleSave = async (currentTime: string) => {
     await saveHandler({
       records,
       students,
       allStudents,
       date,
-      shift: currentShift,
+      shift: currentTime as any, // We pass time as the shift value to the handler
       routines,
       setInitialRecords,
+      setRecords,
       fetchPendingClasses,
       showToast
     });
@@ -171,9 +235,9 @@ export const useAttendanceMarking = (date: string) => {
     }
 
     try {
-      const batchStudents = allStudents.filter(s => s.batch === item.batchName);
+      const batchStudents = allStudents.filter(s => (s.class === item.className || s.name === item.className));
       if (batchStudents.length === 0) {
-        showToast("No active students found in this batch.", "error");
+        showToast("No active students found in this class.", "error");
         return;
       }
       
@@ -181,7 +245,7 @@ export const useAttendanceMarking = (date: string) => {
       
       await markAsCaughtUp(studentIds, item.date, takenDate, shift);
       
-      showToast(`Marked ${item.batchName} as taken on ${takenDate} (${shift === 'Evening' ? 'Afternoon' : 'Morning'})`, "success");
+      showToast(`Marked ${item.className} as taken on ${takenDate} (${shift === 'Evening' ? 'Afternoon' : 'Morning'})`, "success");
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -198,9 +262,9 @@ export const useAttendanceMarking = (date: string) => {
             const lecturesPerMonth = student.lectures_per_month || 12;
             let count = getAttendanceCount(attendanceList, student.id, 'present');
             
-            const recordShift = `CaughtUp_${takenDate}_${shift}`;
+            const recordShift = `CaughtUp_${item.date}_${shift}`;
             const existingRecord = attendanceList.find(
-              a => a.student_id === student.id && a.date === item.date && a.shift === recordShift
+              a => a.student_id === student.id && a.date === takenDate && a.shift === recordShift
             );
 
             if (!existingRecord) {

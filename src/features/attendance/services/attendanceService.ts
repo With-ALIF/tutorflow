@@ -8,11 +8,14 @@ export const fetchDailyAttendance = async (date: string, shift?: 'Morning' | 'Ev
   let query = supabase
     .from("attendance")
     .select("*")
-    .eq("user_id", user.id)
-    .eq("date", date);
-  
+    .eq("user_id", user.id);
+    
   if (shift) {
-    query = query.eq("shift", shift);
+    // If shift is provided, match exact date and shift OR caught up for exactly this shift
+    query = query.or(`and(date.eq.${date},shift.eq.${shift}),shift.eq.CaughtUp_${date}_${shift}`);
+  } else {
+    // If no shift provided, match all shifts for this date, and any caught up for this date
+    query = query.or(`date.eq.${date},shift.like.CaughtUp_${date}_*`);
   }
 
   const { data, error } = await query;
@@ -20,7 +23,10 @@ export const fetchDailyAttendance = async (date: string, shift?: 'Morning' | 'Ev
 
   const records: Record<string, AttendanceStatus> = {};
   data.forEach(record => {
-    const key = shift ? record.student_id : `${record.student_id}_${record.shift}`;
+    let key = shift ? record.student_id : `${record.student_id}_${record.shift}`;
+    if (!shift && record.shift && record.shift.startsWith('CaughtUp_')) {
+      key = `${record.student_id}_${record.shift}_${record.date}`;
+    }
     records[key] = record.status;
   });
   return records;
@@ -84,8 +90,8 @@ export const markAsCaughtUp = async (studentIds: string[], originalDate: string,
   const records = studentIds.map(studentId => ({
     student_id: studentId,
     user_id: user.id,
-    date: originalDate,
-    shift: `CaughtUp_${caughtUpDate}_${shift}`,
+    date: caughtUpDate,
+    shift: `CaughtUp_${originalDate}_${shift}`,
     status: 'caught_up',
     created_at: new Date().toISOString()
   }));

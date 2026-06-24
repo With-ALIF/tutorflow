@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ToastContext } from "../../../context/ToastContext";
-import { fetchStudents, fetchFees, markFeeAsPaid, markFeeAsUnpaid, addPayment, deleteFee } from "../services/feeService";
+import { fetchStudents, fetchFees, markFeeAsPaid, markFeeAsUnpaid, addPayment, deleteFee, updatePayment } from "../services/feeService";
 import { Student, FeeRecord } from "../types/fee.types";
 import { downloadPDF } from "../utils/feeUtils";
 import { notifyPayment } from "@/src/utils/telegramService";
@@ -10,6 +10,7 @@ export const useFees = () => {
   const [fees, setFees] = useState<FeeRecord[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: keyof FeeRecord | 'amount'; direction: 'asc' | 'desc' } | null>(null);
@@ -134,23 +135,32 @@ export const useFees = () => {
     e.preventDefault();
     try {
       const student = students.find(s => s.id === newPayment.student_id);
-      await addPayment(newPayment);
-      setIsModalOpen(false);
-      fetchData();
-      showToast("Payment recorded successfully!");
-      if (student) {
-        try {
-          await notifyPayment({
-            studentName: student.name,
-            amount: newPayment.amount,
-            paymentDate: newPayment.payment_date,
-            feeMonth: newPayment.fee_month,
-            status: newPayment.status as any
-          });
-        } catch (msgErr) {
-          console.error("Error sending Telegram payment notification on creation:", msgErr);
+      
+      if (editingFeeId) {
+        await updatePayment(editingFeeId, newPayment);
+        showToast("Payment record updated!");
+      } else {
+        await addPayment(newPayment);
+        showToast("Payment recorded successfully!");
+        if (student) {
+          try {
+            await notifyPayment({
+              studentName: student.name,
+              amount: newPayment.amount,
+              paymentDate: newPayment.payment_date,
+              feeMonth: newPayment.fee_month,
+              status: newPayment.status as any
+            });
+          } catch (msgErr) {
+            console.error("Error sending Telegram payment notification on creation:", msgErr);
+          }
         }
       }
+
+      setIsModalOpen(false);
+      setEditingFeeId(null);
+      fetchData();
+      
       setNewPayment({
         student_id: "",
         amount: 0,
@@ -159,9 +169,21 @@ export const useFees = () => {
         status: 'paid'
       });
     } catch (err: any) {
-      console.error("Error recording payment:", err);
-      showToast("Failed to record payment", "error");
+      console.error("Error saving payment:", err);
+      showToast(editingFeeId ? "Failed to update payment" : "Failed to record payment", "error");
     }
+  };
+
+  const handleEditFee = (fee: FeeRecord) => {
+    setNewPayment({
+      student_id: fee.student_id,
+      amount: fee.amount,
+      payment_date: fee.payment_date,
+      fee_month: fee.fee_month || new Date().toISOString().slice(0, 7),
+      status: fee.status as 'paid' | 'due'
+    });
+    setEditingFeeId(fee.id);
+    setIsModalOpen(true);
   };
 
   const handleDeleteFee = async (id: string) => {
@@ -191,6 +213,8 @@ export const useFees = () => {
     handleMarkAsUnpaid,
     handleDownloadPDF,
     handleAddPayment,
-    handleDeleteFee
+    handleEditFee,
+    handleDeleteFee,
+    editingFeeId
   };
 };

@@ -11,9 +11,10 @@ interface SaveParams {
   students: Student[];
   allStudents: Student[];
   date: string;
-  shift: "Morning" | "Evening";
+  shift: string;
   routines: Routine[];
   setInitialRecords: (recs: Record<string, AttendanceStatus>) => void;
+  setRecords: (recs: Record<string, AttendanceStatus>) => void;
   fetchPendingClasses: (studentsList: Student[], routinesList: Routine[]) => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
 }
@@ -62,6 +63,19 @@ export const useSaveAttendance = () => {
           const firstUnderscore = key.indexOf('_');
           studentId = key.substring(0, firstUnderscore);
           recordShift = key.substring(firstUnderscore + 1) as "Morning" | "Evening" | string;
+          
+          // Special handling for Caught Up records: ${studentId}_CaughtUp_${originalDate}_${shift}_${caughtUpDate}
+          if (recordShift.startsWith('CaughtUp_')) {
+            const parts = recordShift.split('_');
+            // If it has at least 4 parts: CaughtUp, originalDate, shift, caughtUpDate
+            if (parts.length >= 4) {
+              const actualCaughtUpDate = parts[parts.length - 1];
+              const actualShift = parts.slice(0, parts.length - 1).join('_');
+              
+              await saveAttendance(studentId, actualCaughtUpDate, actualShift, status);
+              continue; // Skip the default save below
+            }
+          }
         }
 
         if (!students.find(s => s.id === studentId)) continue;
@@ -110,7 +124,15 @@ export const useSaveAttendance = () => {
           }
         }
       }
-      setInitialRecords(records);
+      const updatedRecords = { ...records };
+      Object.keys(updatedRecords).forEach(k => {
+        if (updatedRecords[k] === 'cleared') {
+          delete updatedRecords[k];
+        }
+      });
+
+      params.setRecords(updatedRecords);
+      params.setInitialRecords(updatedRecords);
       await fetchPendingClasses(allStudents, routines);
       showToast("Attendance saved successfully!");
     } catch (err: any) {

@@ -29,7 +29,7 @@ Managing a tuition hub involves keeping track of many students, their attendance
 ## Tech Stack
 
 - **Frontend:** React, TypeScript, Tailwind CSS, Vite
-- **Backend/Database:** Firebase (Firestore, Authentication)
+- **Backend/Database:** Supabase (PostgreSQL, Authentication)
 - **State Management:** React Hooks
 - **Animations:** Motion (framer-motion)
 - **Utilities:** date-fns, lucide-react
@@ -48,12 +48,37 @@ Managing a tuition hub involves keeping track of many students, their attendance
    ```
 
 3. **Configure Environment Variables:**
-   Create a `.env` file based on `.env.example` and add your Firebase configuration.
+   Create a `.env` file based on `.env.example` and add your Supabase configuration:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
 4. **Run the development server:**
    ```bash
    npm run dev
    ```
+
+## Database Schema
+
+To set up your Supabase database, run the following SQL in the Supabase SQL Editor:
+
+```sql
+create table public.attendance (
+  id uuid not null default gen_random_uuid (),
+  user_id text not null,
+  student_id uuid null,
+  date date not null,
+  status text not null,
+  shift text null default 'Morning'::text,
+  created_at timestamp with time zone null default now(),
+  constraint attendance_pkey primary key (id),
+  constraint attendance_student_id_date_shift_key unique (student_id, date, shift),
+  constraint attendance_student_id_fkey foreign KEY (student_id) references students (id) on delete CASCADE
+);
+
+create unique INDEX IF not exists attendance_unique_identity on public.attendance using btree (student_id, date, shift);
+```
 
 ## Contributing
 

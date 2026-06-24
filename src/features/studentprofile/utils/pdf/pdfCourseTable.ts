@@ -10,12 +10,11 @@ export const drawCourseTable = (doc: jsPDF, student: Student, yPos: number): num
   
   autoTable(doc, {
     startY: yPos + 5,
-    head: [['Monthly Fee', 'Lectures/Month', 'Lectures/Week', 'Batch']],
+    head: [['Monthly Fee', 'Lectures/Month', 'Lectures/Week']],
     body: [[
       `BDT ${student.monthly_fee}`,
       `${student.lectures_per_month} Days`,
-      `${student.lectures_per_week} Days`,
-      student.batch || "N/A"
+      `${student.lectures_per_week} Days`
     ]],
     theme: 'grid',
     headStyles: { fillColor: [15, 23, 42] },

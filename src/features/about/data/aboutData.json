@@ -5,7 +5,7 @@
     "features": [
       {
         "title": "Student Management",
-        "details": "Easy admission process with details like name, class, batch, and photo. Supports both local upload and web URLs for student photos."
+        "details": "Easy admission process with details like name, class, and photo. Supports both local upload and web URLs for student photos."
       },
       {
         "title": "Attendance Tracking",

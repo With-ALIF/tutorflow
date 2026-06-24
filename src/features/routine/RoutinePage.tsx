@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Plus, Calendar, Clock } from "lucide-react";
 import { RoutineCalendar } from "./components/RoutineCalendar";
 import { RoutineModal } from "./components/RoutineModal";
@@ -27,6 +27,13 @@ export const RoutinePage: React.FC = () => {
 
   const loading = routineLoading || studentsLoading;
 
+  const filteredRoutines = useMemo(() => {
+    if (!routines || !students) return [];
+    return routines.filter(r => 
+      students.some(s => (s.class === r.className || s.name === r.className) && s.status !== 'finished')
+    );
+  }, [routines, students]);
+
   if (loading) return <div className="p-8 text-center text-slate-500">Loading routine...</div>;
 
   return (
@@ -44,7 +51,7 @@ export const RoutinePage: React.FC = () => {
 
         <button 
           onClick={() => { setEditingRoutine(null); setIsModalOpen(true); }}
-          className="flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 uppercase tracking-widest text-xs"
+          className="flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95 uppercase tracking-widest text-xs"
         >
           <Plus className="w-5 h-5" />
           Add Schedule
@@ -53,7 +60,7 @@ export const RoutinePage: React.FC = () => {
 
       <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-3xl sm:rounded-[2.5rem] p-3 sm:p-6 lg:p-10 border border-white dark:border-slate-800 shadow-inner">
         <RoutineCalendar 
-          routines={routines} 
+          routines={filteredRoutines} 
           students={students}
           onEdit={(r) => { setEditingRoutine(r); setIsModalOpen(true); }} 
           onDelete={(id) => setDeleteRoutineId(id)} 

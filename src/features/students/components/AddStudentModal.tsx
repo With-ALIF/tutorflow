@@ -3,17 +3,15 @@ import { motion, AnimatePresence } from "motion/react";
 import { Plus, Users, Layers } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { NewStudent } from "../types/student.types";
-import { useBatches } from "../../batches/hooks/useBatches";
+import { STUDENT_CLASSES } from "../constants";
 
 interface AddStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (student: NewStudent) => Promise<boolean>;
-  initialBatch?: string;
 }
 
-export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onSave, initialBatch }) => {
-  const { batches } = useBatches();
+export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onSave }) => {
   const [newStudent, setNewStudent] = useState<NewStudent>({
     name: "",
     class: "",
@@ -24,17 +22,12 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
     lectures_per_month: 12,
     lectures_per_week: 3,
     class_days: [],
+    class_time: "10:00",
     join_date: new Date().toISOString().split('T')[0],
     photo: "",
-    batch: initialBatch || "",
+    batch: "",
     telegram_chat_id: ""
   });
-
-  React.useEffect(() => {
-    if (initialBatch) {
-      setNewStudent(prev => ({ ...prev, batch: initialBatch }));
-    }
-  }, [initialBatch]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,31 +102,24 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                   <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
                   <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="Enter student name" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Class</label>
-                    <input required type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" placeholder="e.g. 10th" value={newStudent.class} onChange={e => setNewStudent({...newStudent, class: e.target.value})} />
+                    <select 
+                      required 
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" 
+                      value={newStudent.class} 
+                      onChange={e => setNewStudent({...newStudent, class: e.target.value})}
+                    >
+                      <option value="" disabled>Select Class</option>
+                      {STUDENT_CLASSES.map(cls => (
+                        <option key={cls} value={cls}>{cls}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Subject</label>
                     <input required type="text" placeholder="e.g. Mathematics" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" value={newStudent.subject} onChange={e => setNewStudent({...newStudent, subject: e.target.value})} />
-                  </div>
-                  <div className="col-span-2 lg:col-span-1">
-                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Assigned Batch</label>
-                    <div className="relative">
-                      <Layers className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                      <select 
-                        required 
-                        className="w-full pl-9 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white text-sm appearance-none"
-                        value={newStudent.batch} 
-                        onChange={e => setNewStudent({...newStudent, batch: e.target.value})}
-                      >
-                        <option value="">Select Batch</option>
-                        {batches.map(b => (
-                          <option key={b.id} value={b.name}>{b.name}</option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                 </div>
                 <div>
@@ -186,6 +172,17 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                         </button>
                       ))}
                     </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Class Time</label>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" 
+                      value={newStudent.class_time} 
+                      onChange={e => setNewStudent({...newStudent, class_time: e.target.value})} 
+                    />
                   </div>
                 </div>
                 <div>

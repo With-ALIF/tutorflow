@@ -79,6 +79,21 @@ export const deleteFee = async (id: string): Promise<void> => {
   if (error) throw error;
 };
 
+export const updatePayment = async (id: string, paymentData: any): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  
+  const { error } = await supabase
+    .from("fees")
+    .update({
+      ...paymentData
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+    
+  if (error) throw error;
+};
+
 export const addPayment = async (paymentData: any): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;

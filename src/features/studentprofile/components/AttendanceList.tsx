@@ -20,13 +20,13 @@ export const AttendanceList = ({
           <div className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
             record.status === 'caught_up'
-              ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
               : record.status === 'present' 
                 ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" 
                 : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
           )}>
             {record.status === 'caught_up' ? (
-              <CheckCircle2 className="w-5 h-5 text-amber-500" />
+              <CheckCircle2 className="w-5 h-5 text-orange-500" />
             ) : record.status === 'present' ? (
               <CheckCircle2 className="w-5 h-5" />
             ) : (
@@ -45,7 +45,7 @@ export const AttendanceList = ({
         <span className={cn(
           "px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors",
           record.status === 'caught_up'
-            ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-600 group-hover:text-white"
+            ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 group-hover:bg-orange-600 group-hover:text-white"
             : record.status === 'present' 
               ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white" 
               : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 group-hover:bg-red-600 group-hover:text-white"

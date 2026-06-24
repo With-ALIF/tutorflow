@@ -1,5 +1,6 @@
 import { supabase } from "../../../lib/supabase";
 import { Routine, NewRoutine, DayOfWeek } from "../types/routine.types";
+import { Student, NewStudent } from "../../students/types/student.types";
 
 export const routineService = {
   fetchRoutines: async (): Promise<Routine[]> => {
@@ -41,14 +42,11 @@ export const routineService = {
       return {
         id: r.id,
         user_id: r.user_id,
-        batchName: r.batch_name || r.batchname || r.batchName || "",
+        className: r.class || "",
         day: normalizedDay,
         startTime: r.start_time || r.starttime || r.startTime || "10:00",
         endTime: r.end_time || r.endtime || r.endTime || "11:00",
-        subject: r.subject || "",
-        room: r.room || "",
-        color: r.color || "#3b82f6",
-        shift: r.shift || "Morning"
+        subject: r.subject || ""
       };
     });
   },
@@ -57,19 +55,12 @@ export const routineService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
     
-    // Based on the error log, the column is 'batchname' (lowercase)
-    // We'll try to provide both to be safe, but Postgres will complain if a column doesn't exist.
-    // So we use a trial-and-error approach or try the most likely one first.
-    
     const payload = {
-      batchname: routine.batchName,
+      class: routine.className,
       starttime: routine.startTime,
       endtime: routine.endTime,
       day: routine.day,
       subject: routine.subject,
-      room: routine.room,
-      color: routine.color,
-      shift: routine.shift,
       user_id: user.id
     };
 
@@ -79,29 +70,7 @@ export const routineService = {
       .select()
       .single();
       
-    if (error) {
-      // If lowercase fails, try snake_case (batch_name)
-      if (error.code === '42703') { // undefined_column
-        const { data: secondData, error: secondError } = await supabase
-          .from("routines")
-          .insert({
-            batch_name: routine.batchName,
-            start_time: routine.startTime,
-            end_time: routine.endTime,
-            day: routine.day,
-            subject: routine.subject,
-            room: routine.room,
-            color: routine.color,
-            shift: routine.shift,
-            user_id: user.id
-          })
-          .select()
-          .single();
-        if (secondError) throw secondError;
-        return secondData.id;
-      }
-      throw error;
-    }
+    if (error) throw error;
     return data.id;
   },
 
@@ -109,54 +78,24 @@ export const routineService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
     
-    const updateData: any = {};
-    if (routine.batchName !== undefined) {
-      updateData.batchname = routine.batchName;
-      updateData.batch_name = routine.batchName; // Try both
-    }
-    if (routine.startTime !== undefined) {
-      updateData.starttime = routine.startTime;
-      updateData.start_time = routine.startTime;
-    }
-    if (routine.endTime !== undefined) {
-      updateData.endtime = routine.endTime;
-      updateData.end_time = routine.endTime;
-    }
-    // ... we need to be careful with trying both in update as it might fail if one doesn't exist ...
-    // Better to use the same logic as addRoutine or just try one and catch
-    
-    const sanitizedUpdate: any = {};
-    if (routine.day !== undefined) sanitizedUpdate.day = routine.day;
-    if (routine.subject !== undefined) sanitizedUpdate.subject = routine.subject;
-    if (routine.room !== undefined) sanitizedUpdate.room = routine.room;
-    if (routine.color !== undefined) sanitizedUpdate.color = routine.color;
-    if (routine.shift !== undefined) sanitizedUpdate.shift = routine.shift;
-
-    const tryUpdate = async (fields: any) => {
-      const { error } = await supabase
-        .from("routines")
-        .update({ ...sanitizedUpdate, ...fields })
-        .eq("id", id)
-        .eq("user_id", user.id);
-      return error;
+    // Map Partial<Routine> to database fields
+    const updateData: any = {
+      day: routine.day,
+      subject: routine.subject
     };
 
-    // Try lowercase first
-    const lowercaseFields: any = {};
-    if (routine.batchName !== undefined) lowercaseFields.batchname = routine.batchName;
-    if (routine.startTime !== undefined) lowercaseFields.starttime = routine.startTime;
-    if (routine.endTime !== undefined) lowercaseFields.endtime = routine.endTime;
+    if (routine.className !== undefined) updateData.class = routine.className;
+    if (routine.startTime !== undefined) updateData.starttime = routine.startTime;
+    if (routine.endTime !== undefined) updateData.endtime = routine.endTime;
     
-    let error = await tryUpdate(lowercaseFields);
-    
-    if (error && error.code === '42703') {
-      // Try snake_case
-      const snakeFields: any = {};
-      if (routine.batchName !== undefined) snakeFields.batch_name = routine.batchName;
-      if (routine.startTime !== undefined) snakeFields.start_time = routine.startTime;
-      if (routine.endTime !== undefined) snakeFields.end_time = routine.endTime;
-      error = await tryUpdate(snakeFields);
-    }
+    // Remove undefined keys
+    Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+
+    const { error } = await supabase
+      .from("routines")
+      .update(updateData)
+      .eq("id", id)
+      .eq("user_id", user.id);
       
     if (error) throw error;
   },
@@ -172,6 +111,88 @@ export const routineService = {
       .eq("user_id", user.id);
       
     if (error) throw error;
+  },
+
+  syncRoutineFromStudent: async (student: Student | NewStudent): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const className = student.class;
+    if (!className) return;
+
+    const dayMap: Record<string, DayOfWeek> = {
+      'Sat': 'Saturday', 'Sun': 'Sunday', 'Mon': 'Monday', 'Tue': 'Tuesday',
+      'Wed': 'Wednesday', 'Thu': 'Thursday', 'Fri': 'Friday'
+    };
+
+    // Fetch all students in this batch to get a union of required days
+    const { data: batchStudents } = await supabase
+      .from("students")
+      .select("class_days")
+      .eq("user_id", user.id)
+      .eq("class", className);
+
+    const allRequiredDays = new Set<string>();
+    
+    if (batchStudents) {
+      batchStudents.forEach(s => {
+        if (s.class_days) {
+          s.class_days.forEach((dayAbbr: string) => {
+            const fullDay = dayMap[dayAbbr];
+            if (fullDay) allRequiredDays.add(fullDay);
+          });
+        }
+      });
+    }
+
+    // Also include the current student (as it might not be committed yet if this is called optimistically)
+    if (student.class_days) {
+      student.class_days.forEach(dayAbbr => {
+        const fullDay = dayMap[dayAbbr];
+        if (fullDay) allRequiredDays.add(fullDay);
+      });
+    }
+
+    const startTime = student.class_time || "10:00";
+    const [h, m] = startTime.split(':').map(Number);
+    const endH = (h + 1) % 24;
+    const endTime = `${endH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+    // Fetch existing routines for this batch
+    const { data: existingRoutines } = await supabase
+      .from("routines")
+      .select("id, day")
+      .eq("user_id", user.id)
+      .eq("class", className);
+
+    const existingDaysMap = new Map<string, string>();
+    if (existingRoutines) {
+      existingRoutines.forEach(r => {
+        existingDaysMap.set(r.day, r.id);
+      });
+    }
+
+    const daysToAdd = Array.from(allRequiredDays).filter(d => !existingDaysMap.has(d));
+    const daysToDeleteIds = Array.from(existingDaysMap.entries())
+      .filter(([day, _id]) => !allRequiredDays.has(day))
+      .map(([_day, id]) => id);
+
+    if (daysToDeleteIds.length > 0) {
+      await supabase.from("routines").delete().in("id", daysToDeleteIds);
+    }
+
+    const newRoutines: any[] = daysToAdd.map(day => ({
+      user_id: user.id,
+      class: className,
+      day: day,
+      starttime: startTime,
+      endtime: endTime,
+      subject: student.subject || "Class"
+    }));
+
+    if (newRoutines.length > 0) {
+      await supabase.from("routines").insert(newRoutines);
+    }
   },
 
   subscribeToRoutines: (callback: (routines: Routine[]) => void, userId: string) => {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Filter, Download, CreditCard, ChevronUp, ChevronDown, Calendar, DollarSign, Clock, Trash2 } from "lucide-react";
+import { Search, Filter, Download, CreditCard, ChevronUp, ChevronDown, Calendar, DollarSign, Clock, Trash2, Edit2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { FeeRecord } from "../types/fee.types";
 
@@ -8,6 +8,7 @@ interface FeesTableProps {
   onDownloadPDF: () => void;
   onMarkAsPaid: (id: string) => void;
   onMarkAsUnpaid: (id: string) => void;
+  onEditFee: (fee: FeeRecord) => void;
   onDeleteFee: (id: string) => void;
   onSort: (key: keyof FeeRecord | 'amount') => void;
   sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
@@ -20,6 +21,7 @@ export const FeesTable: React.FC<FeesTableProps> = ({
   onDownloadPDF, 
   onMarkAsPaid, 
   onMarkAsUnpaid,
+  onEditFee,
   onDeleteFee,
   onSort,
   sortConfig,
@@ -82,14 +84,24 @@ export const FeesTable: React.FC<FeesTableProps> = ({
                 </div>
               </div>
 
-              <button 
-                type="button"
-                onClick={() => setConfirmDeleteId(fee.id)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors shrink-0"
-                title="Delete payment record"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button 
+                  type="button"
+                  onClick={() => onEditFee(fee)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-colors"
+                  title="Edit payment record"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setConfirmDeleteId(fee.id)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors"
+                  title="Delete payment record"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-4 rounded-xl">

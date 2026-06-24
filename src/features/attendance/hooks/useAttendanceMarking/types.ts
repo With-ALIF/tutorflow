@@ -1,17 +1,13 @@
 export interface PendingClass {
-  batchName: string;
+  className: string;
   day: string;
   date: string;
-  shift: "Morning" | "Evening";
   subject?: string;
-  room?: string;
-  color?: string;
 }
 
 export interface CaughtUpClass {
-  batchName: string;
+  className: string;
   originalDate: string;
   coveredDate: string;
-  shift: "Morning" | "Evening";
 }
 

@@ -10,7 +10,6 @@ import StudentProfilePage from "./features/studentprofile/StudentProfile";
 import { Login as LoginFeature } from "./features/auth/Login";
 import { Profile as ProfileFeature } from "./features/profile/Profile";
 import { RoutinePage as RoutineFeature } from "./features/routine/RoutinePage";
-import BatchPage from "./features/batches/BatchPage";
 import { About as AboutFeature } from "./features/about/About";
 import Layout from "./components/Layout";
 import { supabase } from "./lib/supabase";
@@ -65,7 +64,6 @@ export default function App() {
                 <Route index element={<DashboardPage />} />
                 <Route path="students" element={<StudentsFeature />} />
                 <Route path="students/:id" element={<StudentProfilePage />} />
-                <Route path="batches" element={<BatchPage />} />
                 <Route path="attendance" element={<AttendanceFeature />} />
                 <Route path="fees" element={<FeesFeature />} />
                 <Route path="routine" element={<RoutineFeature />} />

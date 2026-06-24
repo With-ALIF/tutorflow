@@ -73,6 +73,15 @@ export const EditClassScheduleSection: React.FC<EditClassScheduleSectionProps> =
           ))}
         </div>
       </div>
+      <div>
+        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Class Time</label>
+        <input 
+          type="time" 
+          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all dark:text-white" 
+          value={editingStudent.class_time || "10:00"} 
+          onChange={e => onChange({ class_time: e.target.value })} 
+        />
+      </div>
     </div>
   );
 };

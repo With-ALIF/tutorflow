@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import { ToastContext } from "../../../context/ToastContext";
 import { studentService } from "../services/studentService";
+import { routineService } from "../../routine/services/routineService";
 import { Student, NewStudent } from "../types/student.types";
 import { notifyStudentAdmission } from "../../../utils/telegramService";
 import { supabase } from "../../../lib/supabase";
@@ -27,6 +28,14 @@ export const useStudents = () => {
   const addStudent = async (student: NewStudent) => {
     try {
       await studentService.addStudent(student);
+      
+      // Automatically sync routine based on class days
+      try {
+        await routineService.syncRoutineFromStudent(student);
+      } catch (routineErr) {
+        console.error("Failed to sync routine:", routineErr);
+      }
+
       showToast("Student added successfully!");
       fetchStudents();
 
@@ -35,7 +44,6 @@ export const useStudents = () => {
         await notifyStudentAdmission({
           name: student.name,
           class: student.class,
-          batch: student.batch,
           monthly_fee: student.monthly_fee,
           join_date: student.join_date,
           phone: student.phone,
@@ -56,6 +64,14 @@ export const useStudents = () => {
   const updateStudent = async (student: Student) => {
     try {
       await studentService.updateStudent(student);
+
+      // Automatically sync routine based on class days
+      try {
+        await routineService.syncRoutineFromStudent(student);
+      } catch (routineErr) {
+        console.error("Failed to sync routine:", routineErr);
+      }
+
       showToast("Student updated successfully!");
       fetchStudents();
       return true;

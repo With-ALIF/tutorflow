@@ -35,7 +35,7 @@ export const StudentRow: React.FC<StudentRowProps> = ({ student, onEdit, onDelet
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{student.class}</span>
-            {student.batch && <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-tight">{student.batch}</span>}
+            {student.batch && student.batch !== student.class && <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-tight">{student.batch}</span>}
           </div>
         </div>
       </td>

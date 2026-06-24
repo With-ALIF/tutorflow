@@ -2,12 +2,15 @@ import React from "react";
 import { Student } from "../../students/types/student.types";
 
 interface RoutineCardStudentsProps {
-  batchName: string;
+  className: string;
   students: Student[];
 }
 
-export const RoutineCardStudents: React.FC<RoutineCardStudentsProps> = ({ batchName, students }) => {
-  const batchStudents = students.filter(s => s.batch === batchName);
+export const RoutineCardStudents: React.FC<RoutineCardStudentsProps> = ({ className, students }) => {
+  const batchStudents = students.filter(s => 
+    (s.class === className || s.name === className) && 
+    s.status !== 'finished'
+  );
 
   return (
     <div className="pt-3 border-t border-slate-50 dark:border-slate-700/50">

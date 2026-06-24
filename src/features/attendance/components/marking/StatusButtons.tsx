@@ -44,10 +44,11 @@ export const StatusButtons: React.FC<StatusButtonsProps> = ({
       {currentStatus && currentStatus !== 'cleared' && (
         <button 
           onClick={() => onStatusChange(studentId, 'cleared')}
-          className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl transition-all active:scale-90 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 shrink-0"
-          title="Clear status (unmark)"
+          className="px-3 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl transition-all active:scale-90 flex items-center justify-center gap-1.5 border border-slate-200/50 dark:border-slate-700/50 shrink-0"
+          title="Undo marking"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Undo</span>
         </button>
       )}
     </div>

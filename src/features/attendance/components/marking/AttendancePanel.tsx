@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { CalendarClock, Clock, Plus } from "lucide-react";
+import { CalendarClock, Clock, Plus, X } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { DatePicker } from "./DatePicker";
 import { AttendanceTable } from "./AttendanceTable";
@@ -56,9 +56,10 @@ export const AttendancePanel: React.FC<AttendancePanelProps> = ({ date, setDate 
         </div>
         <button 
           onClick={handleUndo}
-          className="px-4 py-3 sm:py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors w-full lg:w-auto text-sm h-12 flex items-center justify-center"
+          className="px-4 py-3 sm:py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all w-full lg:w-auto text-xs uppercase tracking-widest h-12 flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 active:scale-95"
         >
-          Undo Changes
+          <X className="w-4 h-4" />
+          Undo All Changes
         </button>
       </div>
 
@@ -81,19 +82,18 @@ export const AttendancePanel: React.FC<AttendancePanelProps> = ({ date, setDate 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pendingClasses.map((item, idx) => (
               <div 
-                key={`${item.batchName}_${item.date}_${idx}`}
+                key={`${item.className}_${item.date}_${idx}`}
                 className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-amber-500/10 dark:border-amber-500/20 shadow-sm flex flex-col justify-between gap-3 text-sm"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span 
-                      className="text-[10px] font-black px-2.5 py-1 text-white rounded-lg uppercase tracking-wider"
-                      style={{ backgroundColor: item.color || '#eab308' }}
+                      className="text-[10px] font-black px-2.5 py-1 text-white rounded-lg uppercase tracking-wider bg-amber-500"
                     >
-                      {item.batchName}
+                      {item.className}
                     </span>
                     <span className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-lg border border-amber-200/50">
-                      {item.shift}
+                      {item.startTime}
                     </span>
                   </div>
                   <div className="font-bold text-slate-700 dark:text-slate-300">
@@ -136,13 +136,13 @@ export const AttendancePanel: React.FC<AttendancePanelProps> = ({ date, setDate 
             />
 
             <div className="p-6 pt-0">
-              <SaveButton onSave={() => handleSave('Morning')} saving={saving} />
+              <SaveButton onSave={() => handleSave('ClassTime')} saving={saving} />
             </div>
           </div>
         ) : (
           <div className="p-12 text-center">
             <h4 className="text-base font-black text-slate-400 uppercase">No Classes Today</h4>
-            <p className="text-xs text-slate-500 mt-1">আজকের রুটিনে কোনো ক্লাস নেই।</p>
+            <p className="text-xs text-slate-500 mt-1">No classes scheduled for today.</p>
           </div>
         )}
       </div>

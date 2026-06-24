@@ -103,7 +103,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ records, students = 
                 "aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl text-sm sm:text-base font-bold transition-all border relative group min-h-0 overflow-hidden",
                 !isCurrentMonth ? "opacity-10 border-transparent cursor-default" : "border-slate-100 dark:border-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-800",
                 overallStatus === 'present' && "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20 shadow-sm shadow-emerald-500/5",
-                overallStatus === 'caught_up' && "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20 shadow-sm shadow-amber-500/5",
+                overallStatus === 'caught_up' && "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-500/20 shadow-sm shadow-orange-500/5",
                 overallStatus === 'absent' && "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/20 shadow-sm shadow-red-500/5",
                 !overallStatus && isCurrentMonth && "bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500",
                 selectedDay && isSameDay(day, selectedDay) && "ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-900 border-transparent"
@@ -121,7 +121,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ records, students = 
                       key={rec.id || index}
                       className={cn(
                         "w-1.5 h-1.5 rounded-full shrink-0",
-                        rec.status === 'present' ? "bg-emerald-500" : rec.status === 'caught_up' ? "bg-amber-500" : "bg-red-500"
+                        rec.status === 'present' ? "bg-emerald-500" : rec.status === 'caught_up' ? "bg-orange-500" : "bg-red-500"
                       )} 
                     />
                   ))}
@@ -163,7 +163,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ records, students = 
                 const student = students?.find(s => s.id === sId) || fallbackStudent;
                 
                 const displayName = student?.name || "Student";
-                const displayBatch = student?.batch || record.batchName || (record as any).batch || "General";
+                const displayClass = student?.class || "General";
                 
                 return (
                   <div 
@@ -184,7 +184,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ records, students = 
                           record.status === 'present' 
                             ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
                             : record.status === 'caught_up'
-                              ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                              ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
                               : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
                         )}>
                           {displayName.charAt(0)}
@@ -195,7 +195,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ records, students = 
                           {displayName}
                         </p>
                         <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">
-                          {displayBatch} • {record.shift && record.shift.startsWith("CaughtUp_") ? `Taken on ${record.shift.split('_')[1]}` : record.shift || 'Any'}
+                          {displayClass} • {record.shift && record.shift.startsWith("CaughtUp_") ? `Makeup for ${new Date(record.shift.split('_')[1]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : record.shift || 'Any'}
                         </p>
                       </div>
                     </div>
@@ -204,7 +204,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ records, students = 
                       record.status === 'present'
                         ? "bg-emerald-100/50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20"
                         : record.status === 'caught_up'
-                          ? "bg-amber-100/50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/20"
+                          ? "bg-orange-100/50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-500/20"
                           : "bg-red-100/50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/20"
                     )}>
                       {record.status === 'caught_up' ? "Caught up" : record.status}

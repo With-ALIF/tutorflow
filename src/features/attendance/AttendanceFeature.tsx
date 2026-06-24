@@ -27,7 +27,7 @@ export const AttendanceFeature: React.FC = () => {
       )}
       {page.activeTab === 'history' && (
         <HistoryPanel 
-          students={students} 
+          students={activeStudents} 
           studentHistory={studentHistory}
           selectedStudentId={page.selectedStudentId}
           setSelectedStudentId={page.setSelectedStudentId}
@@ -46,7 +46,10 @@ export const AttendanceFeature: React.FC = () => {
               </p>
             </div>
           ) : (
-            <CalendarView records={allHistory} students={students} />
+            <CalendarView 
+              records={allHistory.filter(r => activeStudents.some(s => s.id === (r.student_id || (r as any).studentId)))} 
+              students={activeStudents} 
+            />
           )}
         </div>
       )}

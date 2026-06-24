@@ -46,8 +46,9 @@ export const drawAttendanceTables = (
     let shiftDisplay = a.shift || 'Morning';
     if (a.status === 'caught_up' && a.shift?.startsWith('CaughtUp_')) {
       const parts = a.shift.split('_');
+      const missedDate = parts[1];
       const actualShift = parts[2] || 'Morning';
-      shiftDisplay = `Caught Up (${actualShift === 'Evening' ? 'Afternoon' : actualShift})`;
+      shiftDisplay = `Makeup for ${missedDate} (${actualShift === 'Evening' ? 'Afternoon' : actualShift})`;
     } else {
       shiftDisplay = shiftDisplay === 'Evening' ? 'Afternoon' : shiftDisplay;
     }

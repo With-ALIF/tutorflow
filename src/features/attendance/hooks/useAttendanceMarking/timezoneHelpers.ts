@@ -10,7 +10,7 @@ export const getPastDatesList = () => {
   const base = getGmt6Basis();
   const list = [];
   const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  for (let i = 0; i <= 3; i++) {
+  for (let i = 1; i <= 3; i++) {
     const past = new Date(base.getTime() - i * 24 * 60 * 60 * 1000);
     const dStr = `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`;
     const dName = daysOfWeek[past.getDay()];

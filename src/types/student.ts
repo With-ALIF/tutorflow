@@ -10,13 +10,12 @@ export interface Student {
   lectures_per_month: number;
   lectures_per_week: number;
   class_days: string[];
+  class_time?: string; // HH:MM
   join_date: string;
   photo?: string;
-  batch?: string;
   status?: 'active' | 'finished';
   end_date?: string;
   telegram_chat_id?: string;
-  guardian_name?: string;
 }
 
 export type NewStudent = Omit<Student, 'id' | 'user_id'> & {

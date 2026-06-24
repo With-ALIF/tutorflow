@@ -17,22 +17,22 @@ export const MarkTakenModal: React.FC<MarkTakenModalProps> = ({
   onConfirm
 }) => {
   const [takenDate, setTakenDate] = useState("");
-  const [shift, setShift] = useState<'Morning' | 'Evening'>('Morning');
+  const [time, setTime] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       const today = new Date().toISOString().split('T')[0];
       setTakenDate(today);
       if (pendingClass) {
-        setShift(pendingClass.shift || 'Morning');
+        setTime(pendingClass.startTime || "10:00");
       }
     }
   }, [isOpen, pendingClass]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!takenDate) return;
-    onConfirm(takenDate, shift);
+    if (!takenDate || !time) return;
+    onConfirm(takenDate, time as any);
     onClose();
   };
 
@@ -52,7 +52,7 @@ export const MarkTakenModal: React.FC<MarkTakenModalProps> = ({
                   Mark Class as Taken
                 </h2>
                 <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-0.5">
-                  Batch: {pendingClass.batchName} ({pendingClass.date})
+                  Class: {pendingClass.className} ({pendingClass.date})
                 </p>
               </div>
               <button 
@@ -68,7 +68,7 @@ export const MarkTakenModal: React.FC<MarkTakenModalProps> = ({
               <div className="space-y-2">
                 <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-emerald-500" />
-                  <span>Class Taken Date (কখন ক্লাস নিয়েছেন)</span>
+                  <span>Class Taken Date</span>
                 </label>
                 <input 
                   type="date"
@@ -82,41 +82,20 @@ export const MarkTakenModal: React.FC<MarkTakenModalProps> = ({
               <div className="space-y-2">
                 <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
                   <Clock className="w-4 h-4 text-indigo-500" />
-                  <span>Select Shift (শিফট নির্বাচন করুন)</span>
+                  <span>Class Time ({pendingClass.subject || 'Class'})</span>
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShift('Morning')}
-                    className={cn(
-                      "p-4 rounded-xl border-2 font-black text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1",
-                      shift === 'Morning' 
-                        ? "bg-indigo-50/50 dark:bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400" 
-                        : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                    )}
-                  >
-                    <span>☀ Morning</span>
-                    <span className="text-[9px] font-bold text-slate-400 capitalize">সকাল</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShift('Evening')}
-                    className={cn(
-                      "p-4 rounded-xl border-2 font-black text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1",
-                      shift === 'Evening' 
-                        ? "bg-indigo-50/50 dark:bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400" 
-                        : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                    )}
-                  >
-                    <span>🌙 Afternoon</span>
-                    <span className="text-[9px] font-bold text-slate-400 capitalize">বিকাল</span>
-                  </button>
-                </div>
+                <input 
+                  type="time"
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white"
+                  value={time}
+                  onChange={e => setTime(e.target.value)}
+                />
               </div>
 
               <div className="bg-amber-50 dark:bg-amber-950/20 p-3.5 rounded-xl border border-amber-200/50 dark:border-amber-500/15">
                 <p className="text-[10px] font-medium text-amber-700 dark:text-amber-400 leading-relaxed">
-                  এই কাজটি সম্পন্ন করলে ওই ব্যাচের সকল শিক্ষার্থীর জন্য এই ক্লাসের হাজিরা <strong>Caught Up</strong> হিসেবে সেভ হয়ে যাবে। এবং তাদের attendance কাউন্ট বেড়ে যাবে।
+                  Completing this action will save the attendance for all students in this class as <strong>Caught Up</strong> and increase their attendance count.
                 </p>
               </div>
 
@@ -126,7 +105,7 @@ export const MarkTakenModal: React.FC<MarkTakenModalProps> = ({
                   onClick={onClose}
                   className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
-                  Cancel (বাতিল)
+                  Cancel
                 </button>
                 <button 
                   type="submit"

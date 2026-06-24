@@ -4,12 +4,12 @@ import { Routine } from "../../routine/types/routine.types";
 
 interface ProfileRoutineProps {
   routines: Routine[];
-  studentBatch: string;
+  studentClass: string;
 }
 
-export const ProfileRoutine: React.FC<ProfileRoutineProps> = ({ routines, studentBatch }) => {
+export const ProfileRoutine: React.FC<ProfileRoutineProps> = ({ routines, studentClass }) => {
   const batchRoutines = routines
-    .filter(r => r.batchName === studentBatch)
+    .filter(r => r.className === studentClass)
     .sort((a, b) => {
       const days = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
       const dayDiff = days.indexOf(a.day) - days.indexOf(b.day);
@@ -50,12 +50,6 @@ export const ProfileRoutine: React.FC<ProfileRoutineProps> = ({ routines, studen
                   <div className="p-1 px-2 bg-indigo-100 dark:bg-indigo-500/10 rounded-full">
                     <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase">{routine.subject}</span>
                   </div>
-                  {routine.room && (
-                    <div className="flex items-center gap-1 text-[9px] text-slate-400 font-bold">
-                      <MapPin className="w-2.5 h-2.5" />
-                      <span>{routine.room}</span>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -68,7 +62,7 @@ export const ProfileRoutine: React.FC<ProfileRoutineProps> = ({ routines, studen
                 </div>
               </div>
 
-              <div className="w-1 h-8 rounded-full" style={{ backgroundColor: routine.color || '#4f46e5' }} />
+              <div className="w-1 h-8 rounded-full bg-indigo-500" />
             </div>
           ))}
         </div>

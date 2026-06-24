@@ -13,9 +13,11 @@ export const AttendanceItem = ({ activity }: AttendanceItemProps) => (
       "w-10 h-10 rounded-xl flex items-center justify-center",
       activity.status === 'present' 
         ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
-        : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+        : activity.status === 'caught_up'
+          ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
+          : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
     )}>
-      {activity.status === 'present' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+      {activity.status === 'present' ? <CheckCircle2 className="w-5 h-5" /> : activity.status === 'caught_up' ? <CheckCircle2 className="w-5 h-5 text-orange-500" /> : <XCircle className="w-5 h-5" />}
     </div>
     <div className="flex-1">
       <p className="text-sm font-bold text-slate-900 dark:text-white">{activity.studentName}</p>
@@ -28,7 +30,9 @@ export const AttendanceItem = ({ activity }: AttendanceItemProps) => (
         "text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg",
         activity.status === 'present'
           ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-          : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+          : activity.status === 'caught_up'
+            ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
+            : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
       )}>
         {activity.status}
       </span>

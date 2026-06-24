@@ -86,12 +86,12 @@ Now you will receive automated instant notifications for class attendance, new p
       
       {/* Informational Guidance */}
       <div className="bg-slate-50 dark:bg-slate-900/40 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-slate-600 dark:text-slate-400 space-y-2.5">
-        <p className="font-bold text-slate-800 dark:text-slate-200">🤖 How to connect with your Telegram Bot (কানেক্ট করার নিয়ম):</p>
+        <p className="font-bold text-slate-800 dark:text-slate-200">🤖 How to connect with your Telegram Bot:</p>
         <ol className="list-decimal list-inside space-y-1 ml-1 leading-relaxed">
-          <li>Telegram এ যান এবং সার্চ করুন <b>@userinfobot</b> অথবা <b>@raw_data_bot</b> দিয়ে।</li>
-          <li>আপনার নিজস্ব <b>Telegram Chat ID</b> বা <b>User ID</b> পেতে তাদেরকে মেসেজ দিন বা <code>/start</code> করুন।</li>
-          <li>এরপর এই বটের সাথে কানেক্ট করুন: <b>@alif_web_bot</b> (আমাদের অফিশিয়াল নোটিফায়ার বটের সাথে <code>/start</code> করুন)</li>
-          <li>নিচে আপনার Chat ID টি বসিয়ে সেভ করুন।</li>
+          <li>Go to Telegram and search for <b>@userinfobot</b> or <b>@raw_data_bot</b>.</li>
+          <li>Message them or use <code>/start</code> to get your unique <b>Telegram Chat ID</b> or <b>User ID</b>.</li>
+          <li>Then connect with our official notifier bot: <b>@alif_web_bot</b> (Search and use <code>/start</code>).</li>
+          <li>Enter your Chat ID below and save.</li>
         </ol>
       </div>
 

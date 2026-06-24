@@ -24,7 +24,6 @@ import type { User } from "@supabase/supabase-js";
 
 const privateNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Layers, label: "Batches", path: "/batches" },
   { icon: Users, label: "Students", path: "/students" },
   { icon: CalendarCheck, label: "Attendance", path: "/attendance" },
   { icon: CalendarDays, label: "Routine", path: "/routine" },
@@ -66,7 +65,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   };
 
   const navItems = isAuthenticated 
-    ? [...privateNavItems.slice(0, 6), ...publicNavItems, privateNavItems[6]] 
+    ? [...privateNavItems.slice(0, 5), ...publicNavItems, privateNavItems[5]] 
     : publicNavItems;
 
   return (

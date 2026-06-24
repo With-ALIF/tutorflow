@@ -10,7 +10,6 @@ export const fetchDashboardData = async (): Promise<Stats> => {
   if (!user) {
     return {
       totalStudents: 0,
-      totalBatches: 0,
       monthlyIncome: 0,
       dueFees: 0,
       recentActivity: [],
@@ -27,13 +26,6 @@ export const fetchDashboardData = async (): Promise<Stats> => {
     if (studentsError) throw studentsError;
     const totalStudents = students.length;
 
-    const { data: batches, error: batchesError } = await supabase
-      .from("batches")
-      .select("id")
-      .eq("user_id", user.id);
-    
-    if (batchesError) throw batchesError;
-    const totalBatches = batches.length;
     const studentsMap = new Map<string, string>();
     students.forEach(student => {
       studentsMap.set(student.id, student.name);
@@ -94,7 +86,6 @@ export const fetchDashboardData = async (): Promise<Stats> => {
 
     return {
       totalStudents,
-      totalBatches,
       monthlyIncome,
       dueFees: totalDueBalance,
       recentActivity,

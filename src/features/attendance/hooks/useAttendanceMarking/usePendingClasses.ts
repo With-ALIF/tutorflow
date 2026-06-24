@@ -32,64 +32,58 @@ export const usePendingClasses = () => {
         attendanceRecords = data || [];
       }
 
-      // Sort pastDatesList chronologically (oldest first)
       const sortedPastDatesList = [...pastDatesList].sort((a, b) => a.date.localeCompare(b.date));
 
       const pending: PendingClass[] = [];
       const caughtUp: CaughtUpClass[] = [];
 
-      // Get unique batch names
-      const batchNames = Array.from(new Set(routinesList.map(r => r.batchName)));
+      const classNames = Array.from(new Set(routinesList.map(r => r.className)));
 
-      for (const batchName of batchNames) {
-        // Find students in this batch
-        const batchStudents = studentsList.filter(s => s.batch === batchName);
+      for (const className of classNames) {
+        const batchStudents = studentsList.filter(s => 
+          (s.class === className || s.name === className) && 
+          s.status !== 'finished'
+        );
         if (batchStudents.length === 0) continue;
         const studentIds = batchStudents.map(s => s.id);
 
-        // Find all unique dates and shifts where attendance was actually completed for this batch
-        const actualAttendances: { date: string; shift: string }[] = [];
+        const actualAttendances: { date: string }[] = [];
         const seenActual = new Set<string>();
 
         for (const r of attendanceRecords) {
           if (studentIds.includes(r.student_id)) {
-            const shiftStr = r.shift || "Morning";
-            const key = `${r.date}_${shiftStr}`;
+            const key = r.date;
             if (!seenActual.has(key)) {
               seenActual.add(key);
-              actualAttendances.push({ date: r.date, shift: shiftStr });
+              actualAttendances.push({ date: r.date });
             }
           }
         }
 
-        // Gather all scheduled slots for this batch during the 4-day window
-        const scheduledSlots: { date: string; shift: "Morning" | "Evening"; routine: Routine }[] = [];
+        const scheduledSlots: { date: string; routine: Routine }[] = [];
         for (const item of sortedPastDatesList) {
-          const scheduledRoutines = routinesList.filter(r => r.day === item.dayName && r.batchName === batchName);
+          const scheduledRoutines = routinesList.filter(r => r.day === item.dayName && r.className === className);
           for (const r of scheduledRoutines) {
-            // Check if any student in this batch had already joined before/on this date
             const joinedStudents = batchStudents.filter(s => {
               const joinDateOnly = s.join_date ? s.join_date.split('T')[0] : "";
-              return !joinDateOnly || joinDateOnly <= item.date;
+              if (!joinDateOnly) return true;
+              return joinDateOnly <= item.date;
             });
+            
             if (joinedStudents.length === 0) continue;
 
-            const rShift = (r.shift || "Morning") as "Morning" | "Evening";
             scheduledSlots.push({
               date: item.date,
-              shift: rShift,
               routine: r
             });
           }
         }
 
-        // Match scheduled slots to actual attendances
         const consumedActualKeys = new Set<string>();
 
-        // Step 1: Assign exact matches
         const unmatchedSlots: typeof scheduledSlots = [];
         for (const slot of scheduledSlots) {
-          const exactKey = `${slot.date}_${slot.shift}`;
+          const exactKey = slot.date;
           if (seenActual.has(exactKey)) {
             consumedActualKeys.add(exactKey);
           } else {
@@ -97,31 +91,24 @@ export const usePendingClasses = () => {
           }
         }
 
-        // Step 2: For unmatched slots, assign any unused actual attendance on or after the slot's date
-        let unusedActuals = actualAttendances.filter(a => !consumedActualKeys.has(`${a.date}_${a.shift}`));
+        let unusedActuals = actualAttendances.filter(a => !consumedActualKeys.has(a.date));
         unusedActuals.sort((a, b) => a.date.localeCompare(b.date));
 
         for (const slot of unmatchedSlots) {
           const matchIdx = unusedActuals.findIndex(a => a.date >= slot.date);
           if (matchIdx !== -1) {
-            // This slot is successfully covered by a subsequent extra class/catch-up
             caughtUp.push({
-              batchName: slot.routine.batchName,
+              className: slot.routine.className,
               originalDate: slot.date,
-              coveredDate: unusedActuals[matchIdx].date,
-              shift: slot.shift
+              coveredDate: unusedActuals[matchIdx].date
             });
             unusedActuals.splice(matchIdx, 1);
           } else {
-            // No match found, this slot is truly pending
             pending.push({
-              batchName: slot.routine.batchName,
+              className: slot.routine.className,
               day: slot.routine.day,
               date: slot.date,
-              shift: slot.shift,
-              subject: slot.routine.subject,
-              room: slot.routine.room,
-              color: slot.routine.color
+              subject: slot.routine.subject
             });
           }
         }

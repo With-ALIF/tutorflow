@@ -9,7 +9,7 @@ type Language = "en" | "bn";
 
 export const About: React.FC = () => {
   const navigate = useNavigate();
-  const [lang, setLang] = useState<Language>("bn");
+  const [lang, setLang] = useState<Language>("en");
   const content = aboutData[lang];
 
   return (

@@ -22,7 +22,7 @@ export const generateRunningMonthReport = async (
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
-  doc.text(`Roll/ID: #${student.id.slice(0, 8)}  |  Batch: ${student.batch || "N/A"}`, infoX, yPos + 6);
+  doc.text(`Roll/ID: #${student.id.slice(0, 8)}`, infoX, yPos + 6);
   
   yPos += 15;
   
@@ -41,18 +41,12 @@ export const generateRunningMonthReport = async (
   if (totalPresent > 0) {
     const currentCyclePresentsStartIdx = monthsCompleted * lecturesPerMonth;
     if (currentCyclePresentsStartIdx < presents.length) {
-      const currentCycleFirstPresent = presents[currentCyclePresentsStartIdx];
-      currentCycleRecords = sortedAttendance.filter(a => new Date(a.date).getTime() >= new Date(currentCycleFirstPresent.date).getTime());
+      currentCycleRecords = presents.slice(currentCyclePresentsStartIdx);
     } else {
-      const lastPresentOfPrevCycle = presents[currentCyclePresentsStartIdx - 1];
-      if (lastPresentOfPrevCycle) {
-        currentCycleRecords = sortedAttendance.filter(a => new Date(a.date).getTime() > new Date(lastPresentOfPrevCycle.date).getTime());
-      } else {
-        currentCycleRecords = sortedAttendance;
-      }
+      currentCycleRecords = [];
     }
   } else {
-    currentCycleRecords = sortedAttendance;
+    currentCycleRecords = presents;
   }
   
   doc.setFontSize(12);
@@ -94,8 +88,9 @@ export const generateRunningMonthReport = async (
       let shiftDisplay = r.shift || 'Morning';
       if (r.status === 'caught_up' && r.shift?.startsWith('CaughtUp_')) {
         const parts = r.shift.split('_');
+        const missedDate = parts[1];
         const actualShift = parts[2] || 'Morning';
-        shiftDisplay = `Caught Up (${actualShift === 'Evening' ? 'Afternoon' : actualShift})`;
+        shiftDisplay = `Makeup for ${missedDate} (${actualShift === 'Evening' ? 'Afternoon' : actualShift})`;
       } else {
         shiftDisplay = shiftDisplay === 'Evening' ? 'Afternoon' : shiftDisplay;
       }

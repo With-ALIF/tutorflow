@@ -34,7 +34,7 @@ export default function StudentProfile() {
       <div className="space-y-4">
         <ProfileCard student={student} />
         
-        <ProfileRoutine routines={routines} studentBatch={student.batch} />
+        <ProfileRoutine routines={routines} studentClass={student.class} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
