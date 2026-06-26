@@ -66,7 +66,7 @@ To set up your Supabase database, run the following SQL in the Supabase SQL Edit
 ```sql
 create table public.attendance (
   id uuid not null default gen_random_uuid (),
-  user_id text not null,
+  user_id uuid not null,
   student_id uuid null,
   date date not null,
   status text not null,
@@ -78,6 +78,55 @@ create table public.attendance (
 );
 
 create unique INDEX IF not exists attendance_unique_identity on public.attendance using btree (student_id, date, shift);
+
+---
+
+### Database Migration: Changing `user_id` to UUID (Safe Method)
+
+If you encounter an error about "policy definition" while changing the `user_id` type, use this script:
+
+```sql
+-- 1. Drop existing policies (Change names if yours are different)
+DROP POLICY IF EXISTS "Users can manage their own attendance" ON public.attendance;
+DROP POLICY IF EXISTS "Users can manage their own students" ON public.students;
+DROP POLICY IF EXISTS "Users can manage their own fees" ON public.tuition_fees;
+
+-- 2. Alter column types (Safe: No data loss)
+ALTER TABLE public.attendance ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+ALTER TABLE public.students ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+ALTER TABLE public.tuition_fees ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+
+-- 3. Re-create policies
+CREATE POLICY "Users can manage their own attendance" ON public.attendance 
+FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own students" ON public.students 
+FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own fees" ON public.tuition_fees 
+FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own routines" ON public.routines
+FOR ALL USING (auth.uid() = user_id);
+```
+
+### Routines Table
+```sql
+create table public.routines (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  class text not null,
+  day text not null,
+  starttime text not null,
+  endtime text not null,
+  subject text null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint routines_pkey primary key (id)
+);
+
+alter table public.routines enable row level security;
+```
 ```
 
 ## Contributing

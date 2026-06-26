@@ -59,7 +59,7 @@ The **Tutor Management System** is a professional-grade full-stack web applicati
 ```sql
 create table public.attendance (
   id uuid not null default gen_random_uuid (),
-  user_id text not null,
+  user_id uuid not null,
   student_id uuid null,
   date date not null,
   status text not null, -- 'Present', 'Absent', 'Late', 'Leave'
@@ -72,13 +72,35 @@ create table public.attendance (
 
 create unique INDEX IF not exists attendance_unique_identity 
 on public.attendance using btree (student_id, date, shift);
+
+---
+
+### Migration: User ID to UUID (with RLS support)
+
+If you have existing data and policies, run this complete script to safely convert `user_id`:
+
+```sql
+-- 1. Temporarily drop policies using the column
+DROP POLICY IF EXISTS "Users can manage their own attendance" ON public.attendance;
+DROP POLICY IF EXISTS "Users can manage their own students" ON public.students;
+DROP POLICY IF EXISTS "Users can manage their own fees" ON public.tuition_fees;
+
+-- 2. Convert column type (Data stays safe)
+ALTER TABLE public.attendance ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+ALTER TABLE public.students ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+ALTER TABLE public.tuition_fees ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+
+-- 3. Restore policies
+CREATE POLICY "Users can manage their own attendance" ON public.attendance FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage their own students" ON public.students FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage their own fees" ON public.tuition_fees FOR ALL USING (auth.uid() = user_id);
 ```
 
 ### Students Table
 ```sql
 create table public.students (
   id uuid not null default gen_random_uuid (),
-  user_id text not null,
+  user_id uuid not null,
   name text not null,
   student_class text not null,
   batch_name text not null,
@@ -94,7 +116,7 @@ create table public.students (
 ```sql
 create table public.tuition_fees (
   id uuid not null default gen_random_uuid (),
-  user_id text not null,
+  user_id uuid not null,
   student_id uuid references students(id) on delete cascade,
   amount numeric not null,
   month text not null,
@@ -103,6 +125,29 @@ create table public.tuition_fees (
   created_at timestamp with time zone default now(),
   constraint tuition_fees_pkey primary key (id)
 );
+```
+
+### Routines Table
+```sql
+create table public.routines (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  class text not null,
+  day text not null,
+  starttime text not null,
+  endtime text not null,
+  subject text null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint routines_pkey primary key (id)
+);
+
+-- Enable RLS
+alter table public.routines enable row level security;
+
+-- Policy
+create policy "Users can manage their own routines" on public.routines
+for all using (auth.uid() = user_id);
 ```
 
 ---
