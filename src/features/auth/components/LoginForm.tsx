@@ -4,6 +4,8 @@ import { Eye, EyeOff } from "lucide-react";
 interface LoginFormProps {
   email: string;
   setEmail: (email: string) => void;
+  fullName: string;
+  setFullName: (name: string) => void;
   password: string;
   setPassword: (password: string) => void;
   isSignUp: boolean;
@@ -14,6 +16,8 @@ interface LoginFormProps {
 export const LoginForm: React.FC<LoginFormProps> = ({
   email,
   setEmail,
+  fullName,
+  setFullName,
   password,
   setPassword,
   isSignUp,
@@ -24,6 +28,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5 mb-6">
+      {isSignUp && (
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5 text-left">
+            Full Name
+          </label>
+          <input
+            type="text"
+            placeholder="Enter your full name"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder:text-slate-400"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required={isSignUp}
+          />
+        </div>
+      )}
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-1.5 text-left">
           Email Address

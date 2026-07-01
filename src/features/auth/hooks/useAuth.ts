@@ -4,6 +4,7 @@ import { loginWithEmail, signUpWithEmail } from "../services/authService";
 
 export const useAuth = () => {
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +17,7 @@ export const useAuth = () => {
     setLoading(true);
     try {
       if (isSignUp) {
-        await signUpWithEmail(email, password);
+        await signUpWithEmail(email, password, fullName);
       } else {
         await loginWithEmail(email, password);
       }
@@ -31,6 +32,8 @@ export const useAuth = () => {
   return {
     email,
     setEmail,
+    fullName,
+    setFullName,
     password,
     setPassword,
     isSignUp,

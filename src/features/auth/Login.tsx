@@ -10,6 +10,8 @@ export const Login: React.FC = () => {
   const {
     email,
     setEmail,
+    fullName,
+    setFullName,
     password,
     setPassword,
     isSignUp,
@@ -48,6 +50,8 @@ export const Login: React.FC = () => {
           <LoginForm 
             email={email}
             setEmail={setEmail}
+            fullName={fullName}
+            setFullName={setFullName}
             password={password}
             setPassword={setPassword}
             isSignUp={isSignUp}

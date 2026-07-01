@@ -127,6 +127,46 @@ create table public.tuition_fees (
 );
 ```
 
+### Users Table (User Metadata)
+```sql
+-- 1. Create Users table
+create table if not exists public.users (
+  id uuid references auth.users on delete cascade not null primary key,
+  full_name text,
+  email text,
+  phone_number text,
+  telegram_chat_id text,
+  updated_at timestamp with time zone default now(),
+  created_at timestamp with time zone default now()
+);
+
+-- 2. Enable RLS
+alter table public.users enable row level security;
+
+-- 3. Setup Policies
+drop policy if exists "Users can view own data" on public.users;
+create policy "Users can view own data" on public.users for select using (auth.uid() = id);
+
+drop policy if exists "Users can update own data" on public.users;
+create policy "Users can update own data" on public.users for update using (auth.uid() = id);
+
+-- 4. Function to handle new user signup
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.users (id, full_name, email)
+  values (new.id, new.raw_user_meta_data->>'full_name', new.email);
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- 5. Trigger to call function on signup
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+```
+
 ### Routines Table
 ```sql
 create table public.routines (
@@ -152,19 +192,3 @@ for all using (auth.uid() = user_id);
 
 ---
 
-## 5. Development Setup
-
-1. **Environment**:
-   - Copy `.env.example` to `.env`.
-   - Add your `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-
-2. **Installation**:
-   ```bash
-   npm install
-   npm run dev
-   ```
-
-3. **Production Build**:
-   ```bash
-   npm run build
-   ```
